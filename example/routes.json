@@ -1,0 +1,22 @@
+{
+  "routes": [
+    {
+      "version": "1.0",
+      "url": {
+        "prefix": "test"
+      },
+      "request": {
+        "method": "get"
+      },
+      "auth": {
+          "namespace": "LDLAuthPlugin",
+          "name": "HTTP Basic Auth"
+      },
+      "name": "test",
+      "description": "A test route",
+      "dispatcher": {
+        "class": "Dispatcher"
+      }
+    }
+  ]
+}
