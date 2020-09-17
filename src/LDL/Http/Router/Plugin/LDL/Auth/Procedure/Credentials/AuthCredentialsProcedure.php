@@ -4,11 +4,14 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure\Credentials;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Adapter\CredentialsAdapterInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
+use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthCredentialsProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthenticationProcedureInterface;
 
-class AuthCredentialsMechanism implements AuthenticationProcedureInterface, AuthCredentialsProcedureInterface
+class AuthCredentialsProcedure implements AuthenticationProcedureInterface, AuthCredentialsProcedureInterface
 {
 
     public const NAME = 'Credentials';
@@ -23,14 +26,27 @@ class AuthCredentialsMechanism implements AuthenticationProcedureInterface, Auth
      */
     private $passwordVariable;
 
+    /**
+     * @var CredentialsProviderInterface
+     */
+    private $provider;
+
+    /**
+     * @var CredentialsAdapterInterface
+     */
+    private $adapter;
+
     public function __construct(
         CredentialsProviderInterface $provider,
+        CredentialsAdapterInterface $adapter,
         string $usernameVariable,
         string $passwordVariable
     )
     {
         $this->usernameVariable = $usernameVariable;
         $this->passwordVariable = $passwordVariable;
+        $this->provider = $provider;
+        $this->adapter = $adapter;
     }
 
 
@@ -58,6 +74,11 @@ class AuthCredentialsMechanism implements AuthenticationProcedureInterface, Auth
         // TODO: Implement getDescription() method.
     }
 
+    public function isAuthenticated(...$args): bool
+    {
+        return (bool) $this->adapter->isAuthenticated($args);
+    }
+
     public function extractUserFromRequest(RequestInterface $request): ?string
     {
         return $request->get($this->usernameVariable);
@@ -68,8 +89,25 @@ class AuthCredentialsMechanism implements AuthenticationProcedureInterface, Auth
         return $request->get($this->passwordVariable);
     }
 
-    public function validateCredentials(ResponseInterface $response, string $username = null, string $password = null, array ...$args)
+    public function validateCredentials(ResponseInterface $response, string $username = null, string $password = null, ...$args)
     {
-        // TODO: Implement validateCredentials() method.
+        if(null === $username || null === $password){
+            $msg = "Missing value for {$this->usernameVariable} or {$this->passwordVariable}";
+            throw new AuthenticationRequiredException($msg);
+        }
+
+        $user = null;
+
+        try{
+            $user = $this->provider->fetch($username, $password, $args);
+        }catch(\Exception $e){
+            $response->setStatusCode(ResponseInterface::HTTP_CODE_FORBIDDEN);
+        }
+
+        if(null === $user){
+            throw new AuthenticationFailureException('Authentication failed');
+        }
+
+        return $user;
     }
 }

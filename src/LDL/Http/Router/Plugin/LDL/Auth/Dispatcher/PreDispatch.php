@@ -6,7 +6,6 @@ use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Dispatcher\FinalDispatcher;
 use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthenticationProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthCredentialsProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthTokenProcedureInterface;
@@ -73,6 +72,13 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     ) :?string
     {
         if($this->authProvider instanceof AuthCredentialsProcedureInterface){
+
+            $username = $this->authProvider->extractUserFromRequest($request);
+
+            if($this->authProvider->isAuthenticated($response, $username)){
+
+            }
+
             $this->authProvider->validateCredentials(
                 $response,
                 $this->authProvider->extractUserFromRequest($request),

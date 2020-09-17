@@ -10,7 +10,7 @@
       },
       "auth": {
           "namespace": "LDLAuthPlugin",
-          "name": "HTTP Basic Auth"
+          "name": "Credentials"
       },
       "name": "test",
       "description": "A test route",

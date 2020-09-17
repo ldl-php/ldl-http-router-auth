@@ -4,6 +4,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Adapter\CredentialsAdapterInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
@@ -29,10 +30,16 @@ class AuthHTTPBasicProcedure implements AuthenticationProcedureInterface, AuthCr
      */
     private $type;
 
+    /**
+     * @var CredentialsAdapterInterface
+     */
+    private $adapter;
+
     use AuthenticationProcedureTrait;
 
     public function __construct(
         CredentialsProviderInterface $consumer,
+        CredentialsAdapterInterface $adapter,
         string $realm='Authentication required',
         string $type = 'Basic'
     )
@@ -45,6 +52,7 @@ class AuthHTTPBasicProcedure implements AuthenticationProcedureInterface, AuthCr
         $this->realm = $realm;
 
         $this->consumer = $consumer;
+        $this->adapter = $adapter;
     }
 
     public function extractPasswordFromRequest(RequestInterface $request): ?string
@@ -55,6 +63,11 @@ class AuthHTTPBasicProcedure implements AuthenticationProcedureInterface, AuthCr
     public function extractUserFromRequest(RequestInterface $request): ?string
     {
         return $request->getUser();
+    }
+
+    public function isAuthenticated(...$args): bool
+    {
+        return (bool) $this->adapter->isAuthenticated($args);
     }
 
     public function validateCredentials(

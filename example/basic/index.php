@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
 use LDL\Http\Core\Request\Request;
 use LDL\Http\Core\Request\RequestInterface;
@@ -38,7 +38,7 @@ class Dispatcher implements RouteDispatcherInterface
  * Create a provider repository which holds different authentication methods
  */
 $providers = new ProcedureRepository();
-$providers->append(new AuthHTTPBasicProcedure(new PlainFileCredentialsProvider('users.txt')));
+$providers->append(new AuthHTTPBasicProcedure(new PlainFileCredentialsProvider('../users.txt')));
 
 /**
  * Add auth parsing capabilities to route factory
@@ -76,4 +76,3 @@ try {
 }catch(\Exception $e){
 
 }
-

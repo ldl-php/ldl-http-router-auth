@@ -2,6 +2,8 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
+use LDL\Http\Core\Response\ResponseInterface;
+
 interface AuthenticationProcedureInterface
 {
     public const NAMESPACE = 'LDLAuthPlugin';
@@ -20,4 +22,11 @@ interface AuthenticationProcedureInterface
      * @return mixed
      */
     public function getDescription() : string;
+
+    /**
+     * @param ResponseInterface $response
+     * @param string $username
+     * @return bool
+     */
+    public function isAuthenticated(ResponseInterface $response, string $username) : bool;
 }
