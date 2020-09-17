@@ -7,9 +7,9 @@ use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Dispatcher\FinalDispatcher;
 use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\AuthenticationProviderInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\AuthCredentialsProviderInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\AuthTokenProviderInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthenticationProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthCredentialsProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthTokenProcedureInterface;
 use LDL\Http\Router\Route\Route;
 
 class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
@@ -30,12 +30,12 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     private $priority;
 
     /**
-     * @var AuthenticationProviderInterface
+     * @var AuthenticationProcedureInterface
      */
     private $authProvider;
 
     public function __construct(
-        AuthenticationProviderInterface $authProvider,
+        AuthenticationProcedureInterface $authProvider,
         bool $isActive = null,
         int $priority = null
     )
@@ -72,7 +72,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         array $urlArguments = []
     ) :?string
     {
-        if($this->authProvider instanceof AuthCredentialsProviderInterface){
+        if($this->authProvider instanceof AuthCredentialsProcedureInterface){
             $this->authProvider->validateCredentials(
                 $response,
                 $this->authProvider->extractUserFromRequest($request),
@@ -80,7 +80,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
             );
         }
 
-        if($this->authProvider instanceof AuthTokenProviderInterface){
+        if($this->authProvider instanceof AuthTokenProcedureInterface){
             $this->authProvider->validateToken(
                 $response,
                 $this->authProvider->extractTokenFromRequest($request)

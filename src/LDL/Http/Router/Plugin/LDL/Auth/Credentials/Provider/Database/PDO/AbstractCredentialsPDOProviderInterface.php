@@ -4,7 +4,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL;
 
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInterface;
 
-interface AbstractCredentialsDatabaseProviderInterface extends CredentialsProviderInterface
+interface AbstractCredentialsPDOProviderInterface extends CredentialsProviderInterface
 {
     /**
      * Obtains the credentials connection

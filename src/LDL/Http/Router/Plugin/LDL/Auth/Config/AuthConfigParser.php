@@ -3,7 +3,7 @@
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\ProviderRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserInterface;
 use LDL\Http\Router\Route\Route;
 use Psr\Container\ContainerInterface;
@@ -14,12 +14,12 @@ class AuthConfigParser implements RouteConfigParserInterface
     private const DEFAULT_PRIORITY = 1;
 
     /**
-     * @var ProviderRepository
+     * @var ProcedureRepository
      */
     private $providers;
 
     public function __construct(
-        ProviderRepository $providers
+        ProcedureRepository $providers
     )
     {
         $this->providers = $providers;

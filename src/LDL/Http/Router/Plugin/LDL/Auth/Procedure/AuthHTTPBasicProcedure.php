@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Provider;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
@@ -8,10 +8,8 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInte
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 
-class AuthHTTPBasicProvider implements AuthenticationProviderInterface, AuthCredentialsProviderInterface
+class AuthHTTPBasicProcedure implements AuthenticationProcedureInterface, AuthCredentialsProcedureInterface
 {
-    public const NAMESPACE = 'LDLAuthPlugin';
-
     public const NAME = 'HTTP Basic Auth';
 
     public const DESCRIPTION = 'Provides HTTP basic authentication';
@@ -31,7 +29,7 @@ class AuthHTTPBasicProvider implements AuthenticationProviderInterface, AuthCred
      */
     private $type;
 
-    use AuthenticationProviderTrait;
+    use AuthenticationProcedureTrait;
 
     public function __construct(
         CredentialsProviderInterface $consumer,
@@ -39,7 +37,7 @@ class AuthHTTPBasicProvider implements AuthenticationProviderInterface, AuthCred
         string $type = 'Basic'
     )
     {
-        $this->namespace = self::NAMESPACE;
+        $this->namespace = AuthenticationProcedureInterface::NAMESPACE;
         $this->name = self::NAME;
         $this->description = self::DESCRIPTION;
 

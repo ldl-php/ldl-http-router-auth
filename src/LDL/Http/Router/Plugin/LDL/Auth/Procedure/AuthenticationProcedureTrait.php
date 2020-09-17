@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Provider;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
-trait AuthenticationProviderTrait
+trait AuthenticationProcedureTrait
 {
     /**
      * @var string

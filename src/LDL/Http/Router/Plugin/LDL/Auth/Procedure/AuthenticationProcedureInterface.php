@@ -1,9 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Provider;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
-interface AuthenticationProviderInterface
+interface AuthenticationProcedureInterface
 {
+    public const NAMESPACE = 'LDLAuthPlugin';
+
     /**
      * @return string
      */

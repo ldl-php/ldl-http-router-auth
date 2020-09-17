@@ -1,8 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\PDO\MySQL;
 
-class MySQLCredentialsProvider extends AbstractCredentialsDatabaseProvider
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL\AbstractCredentialsPDOProvider;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\DuplicateUsernameException;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameAlreadyExistsException;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameNotFoundException;
+
+class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
 {
     private const DEFAULT_TABLE = 'ldl_auth_credentials';
     private const DEFAULT_ENCRYPTION = \PASSWORD_DEFAULT;
@@ -43,6 +48,7 @@ class MySQLCredentialsProvider extends AbstractCredentialsDatabaseProvider
     )
     {
         parent::__construct($pdo);
+
         $this->userRowName = $userRowName;
         $this->passwordRowName = $passwordRowName;
         $this->table = $table ?? self::DEFAULT_TABLE;
@@ -71,21 +77,24 @@ class MySQLCredentialsProvider extends AbstractCredentialsDatabaseProvider
 
         if(null !== $this->getUser($username)){
             $msg = "Username {$username} already exists! In database table {$this->table}";
-            throw new Exception\UsernameAlreadyExistsException($msg);
+            throw new UsernameAlreadyExistsException($msg);
         }
 
         $password = password_hash($password, $this->encryption, $this->options);
 
         $pdo = $this->getConnection();
 
-        $stmt = $pdo->prepare("INSERT INTO :tableName SET :userRowName=:username, :passwordRowName=:password, createdAt=:createdAt");
+        $sql = 'INSERT INTO :tableName SET :userRowName=:username, :passwordRowName=:password, createdAt=:createdAt';
+
+        $stmt = $pdo->prepare($sql);
+
         $stmt->execute([
             ':tableName' => $this->table,
             ':userRowName' => $this->userRowName,
             ':username' => $username,
             ':passwordRowName' => $this->passwordRowName,
             ':password' => $password,
-            ':createdAt' => new \DateTime("now", new \DateTimeZone("UTC"))
+            ':createdAt' => new \DateTime('now', new \DateTimeZone('UTC'))
         ]);
     }
 
@@ -96,16 +105,21 @@ class MySQLCredentialsProvider extends AbstractCredentialsDatabaseProvider
         $user = $this->getUser($username);
 
         if(!$user){
-            return null;
+            $msg = "Username {$username} was not found";
+            throw new UsernameNotFoundException($msg);
         }
 
         $newUsername = $username ?? $user[$this->userRowName];
         $newPassword = $password ?? $user[$this->passwordRowName];
 
-        $updatedAt = new \DateTime("now", new \DateTimeZone("UTC"));
+        $updatedAt = new \DateTime('now', new \DateTimeZone("UTC"));
 
         $pdo = $this->getConnection();
-        $stmt = $pdo->prepare("UPDATE :tableName SET :userRowName=:username, :passwordRowName=:password, updatedAt=:updatedAt WHERE id=:id");
+
+        $sql = 'UPDATE :tableName SET :userRowName=:username, :passwordRowName=:password, updatedAt=:updatedAt WHERE id=:id';
+
+        $stmt = $pdo->prepare($sql);
+
         $stmt->execute([
             ':id' => $user['id'],
             ':tableName' => $this->table,
@@ -130,7 +144,7 @@ class MySQLCredentialsProvider extends AbstractCredentialsDatabaseProvider
 
         if($stmt->rowCount() > 1){
             $msg = "Duplicate username found, usernames must be unique! In database table {$this->table}";
-            throw new Exception\DuplicateUsernameException($msg);
+            throw new DuplicateUsernameException($msg);
         }
 
         return $stmt->rowCount() > 0 ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;

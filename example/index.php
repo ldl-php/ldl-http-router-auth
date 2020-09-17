@@ -12,8 +12,8 @@ use LDL\Http\Router\Route\Group\RouteGroup;
 use LDL\Http\Router\Router;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Config\AuthConfigParser;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\ProviderRepository;
-use LDL\Http\Router\Plugin\LDL\Auth\Provider\AuthHTTPBasicProvider;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthHTTPBasicProcedure;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\File\Plain\PlainFileCredentialsProvider;
 use LDL\Http\Router\Handler\Exception\Collection\ExceptionHandlerCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
@@ -37,8 +37,8 @@ class Dispatcher implements RouteDispatcherInterface
 /**
  * Create a provider repository which holds different authentication methods
  */
-$providers = new ProviderRepository();
-$providers->append(new AuthHTTPBasicProvider(new PlainFileCredentialsProvider('users.txt')));
+$providers = new ProcedureRepository();
+$providers->append(new AuthHTTPBasicProcedure(new PlainFileCredentialsProvider('users.txt')));
 
 /**
  * Add auth parsing capabilities to route factory

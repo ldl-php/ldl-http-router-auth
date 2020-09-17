@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Provider;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 
-interface AuthCredentialsProviderInterface
+interface AuthCredentialsProcedureInterface
 {
     public function extractUserFromRequest(RequestInterface $request) : ?string;
 

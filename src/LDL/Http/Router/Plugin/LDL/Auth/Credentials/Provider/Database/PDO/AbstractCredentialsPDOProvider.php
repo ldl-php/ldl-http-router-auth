@@ -2,7 +2,7 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL;
 
-abstract class AbstractCredentialsDatabaseProvider implements AbstractCredentialsDatabaseProviderInterface
+abstract class AbstractCredentialsPDOProvider implements AbstractCredentialsPDOProviderInterface
 {
     /**
      * @var \PDO
@@ -11,7 +11,7 @@ abstract class AbstractCredentialsDatabaseProvider implements AbstractCredential
 
     public function __construct(\PDO $pdo)
     {
-        $this->$pdo = $pdo;
+        $this->pdo = $pdo;
     }
 
     /**
