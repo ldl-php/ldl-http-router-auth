@@ -6,8 +6,7 @@ use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Dispatcher\FinalDispatcher;
 use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthenticationProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthCredentialsProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthTokenProcedureInterface;
 use LDL\Http\Router\Route\Route;
@@ -30,19 +29,19 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     private $priority;
 
     /**
-     * @var AuthenticationProcedureInterface
+     * @var AuthProcedureInterface
      */
-    private $authProvider;
+    private $authProcedure;
 
     public function __construct(
-        AuthenticationProcedureInterface $authProvider,
+        AuthProcedureInterface $authProcedure,
         bool $isActive = null,
         int $priority = null
     )
     {
         $this->isActive = $isActive ?? self::DEFAULT_IS_ACTIVE;
         $this->priority = $priority ?? self::DEFAULT_PRIORITY;
-        $this->authProvider = $authProvider;
+        $this->authProcedure = $authProcedure;
     }
 
     public function getNamespace(): string
@@ -72,20 +71,13 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         array $urlArguments = []
     ) :?string
     {
-        if($this->authProvider instanceof AuthCredentialsProcedureInterface){
-            $this->authProvider->validateCredentials(
-                $response,
-                $this->authProvider->extractUserFromRequest($request),
-                $this->authProvider->extractPasswordFromRequest($request)
-            );
+        $userIdentifier = $this->authProcedure->getKeyFromRequest($request);
+
+        if($this->authProcedure->getAuthVerifier()->isAuthenticated($userIdentifier)){
+            return null;
         }
 
-        if($this->authProvider instanceof AuthTokenProcedureInterface){
-            $this->authProvider->validateToken(
-                $response,
-                $this->authProvider->extractTokenFromRequest($request)
-            );
-        }
+        $this->authProcedure->validate($request, $response);
 
         return null;
     }

@@ -13,4 +13,18 @@ interface CredentialsProviderInterface
      * @return array|null
      */
     public function fetch(...$args) : ?array;
+
+    /**
+     * @param mixed ...$args
+     * @return array|null
+     */
+    public function validate(...$args) : ?array;
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @param mixed ...$args
+     * @return bool
+     */
+    public function create(string $username, string $password, ...$args) : bool;
 }
