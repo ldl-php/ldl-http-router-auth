@@ -73,7 +73,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     {
         $userIdentifier = $this->authProcedure->getKeyFromRequest($request);
 
-        if($this->authProcedure->getAuthVerifier()->isAuthenticated($userIdentifier)){
+        if(null !== $userIdentifier && $this->authProcedure->getAuthVerifier()->isAuthenticated($userIdentifier)){
             return null;
         }
 

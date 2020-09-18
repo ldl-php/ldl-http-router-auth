@@ -10,7 +10,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier;
 class FalseVerifier implements AuthVerifierInterface
 {
 
-    public function isAuthenticated(string $username=null): bool
+    public function isAuthenticated(string $username): bool
     {
         return false;
     }
