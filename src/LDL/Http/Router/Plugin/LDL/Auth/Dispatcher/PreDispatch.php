@@ -7,8 +7,6 @@ use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Dispatcher\FinalDispatcher;
 use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthCredentialsProcedureInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthTokenProcedureInterface;
 use LDL\Http\Router\Route\Route;
 
 class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
