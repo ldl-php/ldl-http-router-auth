@@ -2,20 +2,19 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\File\Plain;
 
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderInterface;
+
 interface PlainFileCredentialsProviderOptionsInterface
 {
-    /**
-     * @return int|null
-     */
-    public function getCipher() : ?int;
+    public const SEPARATOR_DEFAULT = ':';
 
     /**
-     * @return array
+     * @return CipherProviderInterface
      */
-    public function getOptions() : array;
+    public function getCipherProvider() :CipherProviderInterface;
 
     /**
      * @return string
      */
-    public function getSeparator() : string;
+    public function getSeparator(): string;
 }

@@ -2,6 +2,9 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\PDO\MySQL;
 
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProvider;
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderOptions;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL\AbstractCredentialsPDOProvider;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\DuplicateUsernameException;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameAlreadyExistsException;
@@ -10,8 +13,6 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameNotFo
 class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
 {
     private const DEFAULT_TABLE = 'ldl_auth_credentials';
-    private const DEFAULT_ENCRYPTION = \PASSWORD_DEFAULT;
-    private const DEFAULT_OPTIONS = [];
 
     /**
      * @var string
@@ -29,22 +30,16 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
     private $passwordRowName;
 
     /**
-     * @var int
+     * @var CipherProviderInterface
      */
-    private $encryption;
-
-    /**
-     * @var array
-     */
-    private $options;
+    private $cipherProvider;
 
     public function __construct(
         \PDO $pdo,
         string $userRowName,
         string $passwordRowName,
         string $table = null,
-        int $encryption = null,
-        array $options = null
+        CipherProviderInterface $cipherProvider = null
     )
     {
         parent::__construct($pdo);
@@ -52,35 +47,24 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
         $this->userRowName = $userRowName;
         $this->passwordRowName = $passwordRowName;
         $this->table = $table ?? self::DEFAULT_TABLE;
-        $this->encryption = $encryption ?? self::DEFAULT_ENCRYPTION;
-        $this->options = $options ?? self::DEFAULT_OPTIONS;
-
+        $this->cipherProvider = $cipherProvider ?? new CipherProvider(new CipherProviderOptions());
     }
 
     public function fetch(...$args): ?array
     {
-        [$username, $password] = $args;
+        [$username] = $args;
 
-        $user = $this->getUser($username);
-
-        if($user && password_verify($password, $user[$this->passwordRowName])){
-            unset($user[$this->passwordRowName]);
-            return ['user' => $user];
-        }
-
-        return null;
+        return $this->getUser($username);
     }
 
-    public function generate(...$args)
+    public function create(string $username, string $password, ...$args) : bool
     {
-        [$username, $password] = $args;
-
         if(null !== $this->getUser($username)){
             $msg = "Username {$username} already exists! In database table {$this->table}";
             throw new UsernameAlreadyExistsException($msg);
         }
 
-        $password = password_hash($password, $this->encryption, $this->options);
+        $password = $this->cipherProvider->hash($password);
 
         $pdo = $this->getConnection();
 
@@ -96,9 +80,11 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
             ':password' => $password,
             ':createdAt' => new \DateTime('now', new \DateTimeZone('UTC'))
         ]);
+
+        return true;
     }
 
-    public function update(...$args)
+    public function update(...$args) : void
     {
         [$username, $password] = $args;
 
@@ -129,6 +115,19 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
             ':password' => $newPassword,
             ':updatedAt' => $updatedAt
         ]);
+    }
+
+    public function validate(...$args): ?array
+    {
+        [$username, $password] = $args;
+
+        $user = $this->getUser($username);
+
+        if($user && $this->cipherProvider->compare($password, $user[$this->passwordRowName])){
+            return $user;
+        }
+
+        return null;
     }
 
     private function getUser(string $username): ?array

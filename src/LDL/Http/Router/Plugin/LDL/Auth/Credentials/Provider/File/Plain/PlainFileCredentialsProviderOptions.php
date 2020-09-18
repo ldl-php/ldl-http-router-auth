@@ -2,47 +2,35 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\File\Plain;
 
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProvider;
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderOptions;
+use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderOptionsInterface;
+
 class PlainFileCredentialsProviderOptions implements PlainFileCredentialsProviderOptionsInterface
 {
-    public const SEPARATOR_DEFAULT = ':';
-    public const CIPHER_DEFAULT = 'PLAIN_TEXT';
-    public const CIPHER_OPTIONS_DEFAULT = [];
-
-    /**
-     * @var int|string
-     */
-    private $cipher;
-
     /**
      * @var string
      */
     private $separator;
 
     /**
-     * @var array
+     * @var CipherProviderInterface
      */
-    private $options;
+    private $cipherProvider;
 
     public function __construct(
         $separator = null,
-        $cipher=null,
-        $options=[]
+        CipherProviderInterface $cipherProvider = null
     )
     {
-
-        $this->separator = $separator ?? self::SEPARATOR_DEFAULT;
-        $this->cipher = $cipher ?? self::CIPHER_DEFAULT;
-        $this->options = $options ?? self::CIPHER_OPTIONS_DEFAULT;
+        $this->separator = $separator ?? PlainFileCredentialsProviderOptionsInterface::SEPARATOR_DEFAULT;
+        $this->cipherProvider = $cipherProvider ?? new CipherProvider(new CipherProviderOptions(CipherProviderOptionsInterface::PLAIN_TEXT));
     }
 
-    public function getOptions(): array
+    public function getCipherProvider() :CipherProviderInterface
     {
-        return $this->options;
-    }
-
-    public function getCipher() :?int
-    {
-        return $this->cipher;
+        return $this->cipherProvider;
     }
 
     public function getSeparator(): string

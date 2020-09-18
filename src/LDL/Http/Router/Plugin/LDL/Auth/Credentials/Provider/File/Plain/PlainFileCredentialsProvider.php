@@ -14,7 +14,7 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
 
     public function __construct(
         string $file,
-        PlainFileCredentialsProviderOptionsInterface $options=null
+        PlainFileCredentialsProviderOptionsInterface $options = null
     )
     {
         parent::__construct($file);
@@ -84,13 +84,10 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
 
         $user = $this->fetch($username);
 
-        /**
-         * Plain text comparison
-         */
-        if(null === $this->options->getCipher()){
-            return $user['password'] === $password ? $user : null;
+        if($user && $this->options->getCipherProvider()->compare($password, $user['password'])){
+            return $user;
         }
 
-        return \password_verify($password, $user['password']) ? $user : null;
+        return null;
     }
 }
