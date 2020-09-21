@@ -6,6 +6,13 @@ use LDL\Http\Core\Response\ResponseInterface;
 
 interface TokenGeneratorInterface
 {
+    public function getNamespace() : string;
+
+    public function getName() : string;
+
     public function create(ResponseInterface $response) : string;
+
     public function destroy(ResponseInterface $response) : bool;
+
+    public function updateOptions(LDLTokenGeneratorOptions $options) : TokenGeneratorInterface;
 }

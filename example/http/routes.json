@@ -20,7 +20,7 @@
         "token": {
           "generator": {
             "namespace": "LDLAuthPlugin",
-            "name": "LDLTokenGenerator"
+            "name": "LDLTokenPDOGenerator"
           },
           "options": {
             "expires": "+ 1 day"
