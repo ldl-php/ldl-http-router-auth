@@ -2,6 +2,9 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\LDLTokenGeneratorOptions;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
@@ -26,13 +29,20 @@ class AuthConfigParser implements RouteConfigParserInterface
      */
     private $verifiers;
 
+    /**
+     * @var TokenGeneratorRepository
+     */
+    private $generators;
+
     public function __construct(
         ProcedureRepository $procedures,
-        AuthVerifierRepository $verifiers
+        AuthVerifierRepository $verifiers,
+        TokenGeneratorRepository $generators = null
     )
     {
         $this->verifiers = $verifiers;
         $this->procedures = $procedures;
+        $this->generators = $generators;
     }
 
     public function parse(
@@ -78,9 +88,12 @@ class AuthConfigParser implements RouteConfigParserInterface
             throw new Exception\MissingProcedureException($msg);
         }
 
+        $tokenGenerator = null !== $this->generators ? $this->getTokenGenerator($auth) : null;
+
         $preDispatch = new PreDispatch(
             $procedure,
             $verifier,
+            $tokenGenerator,
             $isActive,
             $priority
         );
@@ -130,5 +143,33 @@ class AuthConfigParser implements RouteConfigParserInterface
         }
 
         return $this->verifiers->getVerifier($verifier['namespace'], $verifier['name']);
+    }
+
+    private function getTokenGenerator(array $auth) : ?TokenGeneratorInterface
+    {
+        if(!array_key_exists('token', $auth)){
+            return null;
+        }
+
+        $token = $auth['token'];
+
+        if(!array_key_exists('generator', $token)){
+            return null;
+        }
+
+        $generator = $this->generators->getGenerator($token['generator']['namespace'], $token['generator']['name']);
+
+        if(array_key_exists('options', $token)){
+            $options = new LDLTokenGeneratorOptions(
+                $token['options']['algorithm'] ?? null,
+                $token['options']['expiresAt'] ?? null,
+                $token['options']['application'] ?? null,
+                $token['options']['headers'] ?? null
+            );
+
+            $generator->updateOptions($options);
+        }
+
+        return $generator;
     }
 }

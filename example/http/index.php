@@ -19,6 +19,8 @@ use LDL\Http\Router\Handler\Exception\Collection\ExceptionHandlerCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\FalseVerifier;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\LDLTokenPDOGenerator;
 
 class Dispatcher implements RouteDispatcherInterface
 {
@@ -50,6 +52,9 @@ $providers->append(
 
 $verifiers = new AuthVerifierRepository();
 $verifiers->append(new FalseVerifier());
+
+$generators = new TokenGeneratorRepository();
+$generators->append(new LDLTokenPDOGenerator());
 
 /**
  * Add auth parsing capabilities to route factory
