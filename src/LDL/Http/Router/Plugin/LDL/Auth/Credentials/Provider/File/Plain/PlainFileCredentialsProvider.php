@@ -56,7 +56,7 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
     {
         $return = true;
 
-        if($this->getUser($username)){
+        if($this->fetch($username)){
             throw new DuplicateUsernameException("$username already exists");
         }
 

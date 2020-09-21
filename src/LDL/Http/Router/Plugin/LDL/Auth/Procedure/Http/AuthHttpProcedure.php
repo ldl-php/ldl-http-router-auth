@@ -5,13 +5,13 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure\Http;
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureTrait;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AbstractAuthProcedure;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
 
-class AuthHttpProcedure implements AuthProcedureInterface
+class AuthHttpProcedure extends AbstractAuthProcedure implements RequestKeyInterface, RequestSecretInterface
 {
     public const NAME = 'HTTP Basic Auth';
 
@@ -22,21 +22,19 @@ class AuthHttpProcedure implements AuthProcedureInterface
      */
     private $options;
 
-    use AuthProcedureTrait;
-
     public function __construct(
         CredentialsProviderInterface $provider,
-        AuthVerifierInterface $verifier,
-        AuthHttpProcedureOptionsInterface $options=null
+        AuthHttpProcedureOptionsInterface $options=null,
+        bool $isDefault = false
     )
     {
-        $this->verifier = $verifier;
-        $this->provider = $provider;
-        $this->options = $options ?? new AuthHttpProcedureOptions();
+        $this->setCredentialsProvider($provider)
+            ->setDefault($isDefault)
+            ->setNamespace(AuthProcedureInterface::NAMESPACE)
+            ->setName(self::NAME)
+            ->setDescription(self::DESCRIPTION);
 
-        $this->namespace = AuthProcedureInterface::NAMESPACE;
-        $this->name = self::NAME;
-        $this->description = self::DESCRIPTION;
+        $this->options = $options ?? new AuthHttpProcedureOptions();
     }
 
     public function getSecretFromRequest(RequestInterface $request): ?string
@@ -49,31 +47,30 @@ class AuthHttpProcedure implements AuthProcedureInterface
         return $request->getUser();
     }
 
-    public function validate(
+    public function handle(
         RequestInterface $request,
         ResponseInterface $response
     ) : void
     {
-        $username = $request->getUser();
-        $password = $request->getPassword();
 
-        if(null === $username || null === $password){
-            $response->getHeaderBag()
-                ->set(
-                    'WWW-Authenticate',
-                    sprintf(
-                        '%s realm="%s"',
-                        $this->options->getType(),
-                        $this->options->getRealm()
-                    )
-                );
+        $credentials = $this->getCredentialsProvider();
 
-            throw new AuthenticationRequiredException($this->options->getRealm());
+        if(null !== $credentials->validate($this->getKeyFromRequest($request), $this->getSecretFromRequest($request))){
+            return;
         }
 
-        if(null === $this->provider->fetch($username, $password)){
-            throw new AuthenticationFailureException('Authentication failed');
-        }
+        $response->getHeaderBag()
+            ->set(
+                'WWW-Authenticate',
+                sprintf(
+                    '%s realm="%s"',
+                    $this->options->getType(),
+                    $this->options->getRealm()
+                )
+            );
+
+        throw new AuthenticationRequiredException($this->options->getRealm());
+
     }
 
 }

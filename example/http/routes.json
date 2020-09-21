@@ -3,20 +3,60 @@
     {
       "version": "1.0",
       "url": {
-        "prefix": "test"
+        "prefix": "login"
       },
       "request": {
-        "method": "get"
+        "method": "post"
       },
       "auth": {
+        "procedure": {
           "namespace": "LDLAuthPlugin",
           "name": "HTTP Basic Auth"
+        },
+        "verifier": {
+          "namespace": "LDLAuthPlugin",
+          "name": "False Verifier"
+        },
+        "token": {
+          "generator": {
+            "namespace": "LDLAuthPlugin",
+            "name": "LDLTokenGenerator"
+          },
+          "options": {
+            "expires": "+ 1 day"
+          }
+        }
       },
       "name": "test",
       "description": "A test route",
       "dispatcher": {
         "class": "Dispatcher"
       }
+    },
+    {
+      "version": "1.0",
+      "url": {
+        "prefix": "token"
+      },
+      "request": {
+        "method": "get"
+      },
+      "auth": {
+        "procedure": {
+          "namespace": "LDLAuthPlugin",
+          "name": "Token Procedure"
+        },
+        "verifier": {
+          "namespace": "LDLAuthPlugin",
+          "name": "Token Verifier"
+        }
+      },
+      "name": "token",
+      "description": "Validates token authentication",
+      "dispatcher": {
+        "class": "Dispatcher"
+      }
     }
+
   ]
 }

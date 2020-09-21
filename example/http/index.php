@@ -17,6 +17,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Http\AuthHttpProcedure;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\File\Plain\PlainFileCredentialsProvider;
 use LDL\Http\Router\Handler\Exception\Collection\ExceptionHandlerCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
+use LDL\Http\Router\Plugin\LDL\Auth\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\FalseVerifier;
 
 class Dispatcher implements RouteDispatcherInterface
@@ -42,15 +43,19 @@ $providers->append(
         new PlainFileCredentialsProvider(
             'users.txt'
         ),
-        new FalseVerifier()
+        null,
+        true
     )
 );
+
+$verifiers = new AuthVerifierRepository();
+$verifiers->append(new FalseVerifier());
 
 /**
  * Add auth parsing capabilities to route factory
  */
 $parserCollection = new RouteConfigParserCollection();
-$parserCollection->append(new AuthConfigParser($providers));
+$parserCollection->append(new AuthConfigParser($providers, $verifiers));
 
 /**
  * Add global exception handler which handles AuthenticationRequired

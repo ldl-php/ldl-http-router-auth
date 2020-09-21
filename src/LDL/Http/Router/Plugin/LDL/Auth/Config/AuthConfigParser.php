@@ -2,8 +2,11 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserInterface;
 use LDL\Http\Router\Route\Route;
 use Psr\Container\ContainerInterface;
@@ -16,13 +19,20 @@ class AuthConfigParser implements RouteConfigParserInterface
     /**
      * @var ProcedureRepository
      */
-    private $providers;
+    private $procedures;
+
+    /**
+     * @var AuthVerifierRepository
+     */
+    private $verifiers;
 
     public function __construct(
-        ProcedureRepository $providers
+        ProcedureRepository $procedures,
+        AuthVerifierRepository $verifiers
     )
     {
-        $this->providers = $providers;
+        $this->verifiers = $verifiers;
+        $this->procedures = $procedures;
     }
 
     public function parse(
@@ -32,6 +42,10 @@ class AuthConfigParser implements RouteConfigParserInterface
         string $file = null
     ): void
     {
+        /**
+         * If auth key does not exists in the route configuration
+         * assume no authentication is required.
+         */
         if(!array_key_exists('auth', $data)){
             return;
         }
@@ -50,20 +64,71 @@ class AuthConfigParser implements RouteConfigParserInterface
             $priority = (int) $auth['priority'];
         }
 
-        if(!array_key_exists('namespace', $auth)) {
+        $verifier = $this->getVerifier($auth);
+
+        if(null === $verifier){
+            $msg = 'Missing verifier, in "auth" section';
+            throw new Exception\MissingVerifierException($msg);
+        }
+
+        $procedure = $this->getProcedure($auth);
+
+        if(null === $procedure){
+            $msg = 'Missing authentication procedure, and no default authentication procedure was found';
+            throw new Exception\MissingProcedureException($msg);
+        }
+
+        $preDispatch = new PreDispatch(
+            $procedure,
+            $verifier,
+            $isActive,
+            $priority
+        );
+
+        $route->getConfig()->getPreDispatchMiddleware()->append($preDispatch);
+    }
+
+    private function getProcedure(array $auth) : ?AuthProcedureInterface
+    {
+        if(!array_key_exists('procedure', $auth)) {
+            return null;
+        }
+
+        $procedure = $auth['procedure'];
+
+        if(!array_key_exists('namespace', $procedure)) {
             $msg = 'On auth section, missing namespace';
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
-        if(!array_key_exists('name', $auth)) {
+        if(!array_key_exists('name', $procedure)) {
             $msg = 'On auth section, missing name';
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
-        $provider = $this->providers->getProvider($auth['namespace'], $auth['name']);
+        $provider = $this->procedures->getProvider($procedure['namespace'], $procedure['name']);
 
-        $preDispatch = new PreDispatch($provider, $isActive, $priority);
+        return $provider ?? $this->procedures->getDefault();
+    }
 
-        $route->getConfig()->getPreDispatchMiddleware()->append($preDispatch);
+    private function getVerifier(array $auth) : ?AuthVerifierInterface
+    {
+        if(!array_key_exists('verifier', $auth)) {
+            return null;
+        }
+
+        $verifier = $auth['verifier'];
+
+        if(!array_key_exists('namespace', $verifier)) {
+            $msg = 'On auth section verifier, missing namespace';
+            throw new Exception\AuthConfigParserSectionException($msg);
+        }
+
+        if(!array_key_exists('name', $verifier)) {
+            $msg = 'On auth section verifier, missing name';
+            throw new Exception\AuthConfigParserSectionException($msg);
+        }
+
+        return $this->verifiers->getVerifier($verifier['namespace'], $verifier['name']);
     }
 }

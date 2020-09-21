@@ -1,28 +1,29 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure\Credentials;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure\Credentials\Token;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AbstractAuthProcedure;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Token\LDLTokenOptionsInterface;
 
-class AuthCredentialsProcedure extends AbstractAuthProcedure
+class LDLTokenProcedure extends AbstractAuthProcedure implements RequestKeyInterface
 {
-    public const NAME = 'Credentials';
+    public const NAME = 'LDL Token';
 
-    public const DESCRIPTION = 'Provides an authentication based on credentials';
+    public const DESCRIPTION = 'Provides an authentication based on a token set in the request headers';
 
     /**
-     * @var AuthCredentialsOptionsInterface
+     * @var LDLTokenOptionsInterface
      */
     private $options;
 
     public function __construct(
         CredentialsProviderInterface $provider,
-        AuthCredentialsOptionsInterface $options,
+        LDLTokenOptionsInterface $options,
         bool $isDefault = false
     )
     {
@@ -37,12 +38,11 @@ class AuthCredentialsProcedure extends AbstractAuthProcedure
 
     public function getKeyFromRequest(RequestInterface $request): ?string
     {
-        return $request->get($this->options->getKey());
-    }
+        if($this->options->isFromHeaders()){
+            return $request->getHeaderBag()->get($this->options->getKey());
+        }
 
-    public function getSecretFromRequest(RequestInterface $request): ?string
-    {
-        return $request->get($this->options->getSecret());
+        return $request->get($this->options->getKey());
     }
 
     public function handle(

@@ -54,12 +54,26 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
     {
         [$username] = $args;
 
-        return $this->getUser($username);
+        $pdo = $this->getConnection();
+
+        $stmt = $pdo->prepare('SELECT * FROM :tableName WHERE :userRowName = :username');
+        $stmt->execute([
+            ':tableName' => $this->table,
+            ':userRowName' => $this->userRowName,
+            ':username' => $username
+        ]);
+
+        if($stmt->rowCount() > 1){
+            $msg = "Duplicate username found, usernames must be unique! In database table {$this->table}";
+            throw new DuplicateUsernameException($msg);
+        }
+
+        return $stmt->rowCount() > 0 ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
     }
 
     public function create(string $username, string $password, ...$args) : bool
     {
-        if(null !== $this->getUser($username)){
+        if(null !== $this->fetch($username)){
             $msg = "Username {$username} already exists! In database table {$this->table}";
             throw new UsernameAlreadyExistsException($msg);
         }
@@ -88,7 +102,7 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
     {
         [$username, $password] = $args;
 
-        $user = $this->getUser($username);
+        $user = $this->fetch($username);
 
         if(!$user){
             $msg = "Username {$username} was not found";
@@ -121,7 +135,7 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
     {
         [$username, $password] = $args;
 
-        $user = $this->getUser($username);
+        $user = $this->fetch($username);
 
         if($user && $this->cipherProvider->compare($password, $user[$this->passwordRowName])){
             return $user;
@@ -130,22 +144,4 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
         return null;
     }
 
-    private function getUser(string $username): ?array
-    {
-        $pdo = $this->getConnection();
-
-        $stmt = $pdo->prepare('SELECT * FROM :tableName WHERE :userRowName = :username');
-        $stmt->execute([
-            ':tableName' => $this->table,
-            ':userRowName' => $this->userRowName,
-            ':username' => $username
-        ]);
-
-        if($stmt->rowCount() > 1){
-            $msg = "Duplicate username found, usernames must be unique! In database table {$this->table}";
-            throw new DuplicateUsernameException($msg);
-        }
-
-        return $stmt->rowCount() > 0 ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
-    }
 }

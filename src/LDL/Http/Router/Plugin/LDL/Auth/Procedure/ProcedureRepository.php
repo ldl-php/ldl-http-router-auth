@@ -16,12 +16,17 @@ class ProcedureRepository extends ObjectCollection
         }
 
         $msg = sprintf(
-            'Item must implement: "%s",  instance of "%s" was given',
+            'Item must implement: "%s", instance of "%s" was given',
             AuthProcedureInterface::class,
             get_class($item)
         );
 
         throw new TypeMismatchException($msg);
+    }
+
+    public function getDefault() : ?AuthProcedureInterface
+    {
+
     }
 
     public function getProvider(string $namespace, string $name) : ?AuthProcedureInterface
