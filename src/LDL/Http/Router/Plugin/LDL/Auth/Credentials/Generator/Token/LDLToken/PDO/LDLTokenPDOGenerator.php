@@ -7,6 +7,8 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\LDLToke
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Hash\Generator\RandomHashGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Hash\Generator\RandomHashGenerator;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\UserDataInterface;
 
 class LDLTokenPDOGenerator implements TokenGeneratorInterface
 {
@@ -76,14 +78,15 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
 
     public function create(
         array $user,
-        ResponseInterface $response
+        ResponseInterface $response,
+        AuthProcedureInterface $authProcedure
     ) : string
     {
         $token = $this->hashGenerator->generate();
         $headers = $this->options->getHeaders();
 
         $sql = sprintf(
-            'INSERT INTO `%s` SET user=:user, `token`=:token, `createdAt`=:createdAt, `expiresAt`=:expiresAt',
+            'INSERT INTO `%s` SET `user`=:user, `token`=:token, `createdAt`=:createdAt, `expiresAt`=:expiresAt, `provider_namespace`=:providerNamespace, `provider_name`=:providerName, `provider_data`=:providerData',
             $this->tableName
         );
 
@@ -93,11 +96,20 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
         $now = new \DateTime('now', $utcTZ);
         $expiresAt = $now->add($this->options->getExpiresAt());
 
+        $extraData = null;
+
+        if($authProcedure instanceof UserDataInterface){
+            $extraData = json_encode($authProcedure->getUserData(), JSON_THROW_ON_ERROR);
+        }
+
         $stmt->execute([
             ':token' => $token,
             ':user' => $user['user'],
             ':createdAt' => $now->format('Y-m-d H:i:s'),
-            ':expiresAt' => $expiresAt->format('Y-m-d H:i:s')
+            ':expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
+            ':providerNamespace' => $authProcedure->getNamespace(),
+            ':providerName' => $authProcedure->getName(),
+            ':providerData' => $extraData
         ]);
 
         $response->getHeaderBag()->set($headers['token'], $token);
@@ -107,7 +119,7 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
         return $token;
     }
 
-    public function destroy(array $user, ResponseInterface $response) : bool
+    public function destroy(array $user, ResponseInterface $response, AuthProcedureInterface $authProcedure) : bool
     {
         return true;
     }

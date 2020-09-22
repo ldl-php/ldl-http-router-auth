@@ -6,7 +6,9 @@
         "ldl-framework/http-core": "dev-master",
         "ldl-framework/http-router": "dev-master",
         "ext-json": "*",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "ext-curl": "*",
+        "guzzlehttp/guzzle": "^7.1"
     },
     "license": "MIT",
     "authors": [
