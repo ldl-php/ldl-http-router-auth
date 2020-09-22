@@ -45,12 +45,18 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
      */
     private $authVerifier;
 
+    /**
+     * @var bool
+     */
+    private $autoRegister;
+
     public function __construct(
         AuthProcedureInterface $authProcedure,
         AuthVerifierInterface $authVerifier,
         TokenGeneratorInterface $tokenGenerator=null,
         bool $isActive = null,
-        int $priority = null
+        int $priority = null,
+        bool $autoRegister = false
     )
     {
         $this->authProcedure = $authProcedure;
@@ -58,6 +64,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         $this->tokenGenerator = $tokenGenerator;
         $this->isActive = $isActive ?? self::DEFAULT_IS_ACTIVE;
         $this->priority = $priority ?? self::DEFAULT_PRIORITY;
+        $this->autoRegister = $autoRegister;
     }
 
     public function getNamespace(): string
@@ -113,13 +120,19 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
              * Handle authentication
              */
             $this->authProcedure->handle($request, $response);
+
+            if($this->autoRegister && !$credentialsProvider->fetch($userIdentifier)){
+                $credentialsProvider->create($userIdentifier, $secret);
+            }
+
+            $user = $credentialsProvider->fetch($userIdentifier);
         }
 
         /**
          * Successful login, if there's a token generator, generate it
          */
         if(null !== $this->tokenGenerator){
-            $this->tokenGenerator->create($user, $response);
+            $this->tokenGenerator->create($user, $response, $this->authProcedure);
         }
 
         return null;

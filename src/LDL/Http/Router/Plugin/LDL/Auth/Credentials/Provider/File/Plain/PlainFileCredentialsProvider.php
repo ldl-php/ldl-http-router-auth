@@ -82,6 +82,10 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
     {
         [$username, $password] = $args;
 
+        if(null === $password){
+            return null;
+        }
+
         $user = $this->fetch($username);
 
         if($user && $this->options->getCipherProvider()->compare($password, $user['password'])){
