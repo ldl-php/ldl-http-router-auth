@@ -10,9 +10,13 @@ interface TokenGeneratorInterface
 
     public function getName() : string;
 
-    public function create(ResponseInterface $response) : string;
+    /**
+     * Must set corresponding token headers
+     * @param array $user
+     * @param ResponseInterface $response
+     * @return string
+     */
+    public function create(array $user, ResponseInterface $response) : string;
 
-    public function destroy(ResponseInterface $response) : bool;
-
-    public function updateOptions(LDLTokenGeneratorOptions $options) : TokenGeneratorInterface;
+    public function destroy(array $user, ResponseInterface $response) : bool;
 }

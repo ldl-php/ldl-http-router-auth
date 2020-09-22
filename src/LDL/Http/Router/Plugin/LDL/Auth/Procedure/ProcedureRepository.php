@@ -29,7 +29,7 @@ class ProcedureRepository extends ObjectCollection
 
     }
 
-    public function getProvider(string $namespace, string $name) : ?AuthProcedureInterface
+    public function getProcedure(string $namespace, string $name) : ?AuthProcedureInterface
     {
         /**
          * @var AuthProcedureInterface $procedure

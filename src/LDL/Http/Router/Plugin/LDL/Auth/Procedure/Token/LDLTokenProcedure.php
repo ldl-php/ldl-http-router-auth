@@ -13,7 +13,6 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Token\LDLTokenOptionsInterface;
 class LDLTokenProcedure extends AbstractAuthProcedure implements RequestKeyInterface
 {
     public const NAME = 'LDL Token';
-
     public const DESCRIPTION = 'Provides an authentication based on a token set in the request headers';
 
     /**
@@ -23,7 +22,7 @@ class LDLTokenProcedure extends AbstractAuthProcedure implements RequestKeyInter
 
     public function __construct(
         CredentialsProviderInterface $provider,
-        LDLTokenOptionsInterface $options,
+        LDLTokenOptionsInterface $options=null,
         bool $isDefault = false
     )
     {

@@ -1,8 +1,7 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Verifier;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier;
 
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Type\Collection\Types\Object\ObjectCollection;
 use LDL\Type\Exception\TypeMismatchException;
 
@@ -32,12 +31,12 @@ class AuthVerifierRepository extends ObjectCollection
          */
         foreach($this as $verifier){
             if($verifier->getNamespace() === $namespace && $verifier->getName() === $name){
-                return $procedure;
+                return $verifier;
             }
         }
 
         $msg = "Authentication verifier with namespace: \"$namespace\" and name: \"$name\" could not be found!";
-        throw new Exception\AuthenticationVerifierNotFound($msg);
+        throw new Exception\AuthVerifierNotFound($msg);
     }
 
 }

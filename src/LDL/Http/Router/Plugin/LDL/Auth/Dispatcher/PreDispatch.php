@@ -9,6 +9,8 @@ use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
 use LDL\Http\Router\Route\Route;
 
 class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
@@ -85,19 +87,17 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         array $urlArguments = []
     ) :?string
     {
+        $userIdentifier = null;
+        $secret = null;
+        $credentialsProvider = $this->authProcedure->getCredentialsProvider();
 
-        $userIdentifier = $this->authProcedure->getKeyFromRequest($request);
+        if($this->authProcedure instanceof RequestKeyInterface) {
+            $userIdentifier = $this->authProcedure->getKeyFromRequest($request);
+        }
 
-        /*
-        yo me logueo con usuario y contraseña en el endpoint /login
-        aca cuando el login es exitoso, *se crea un token* <-
-        este token: *se manda en el response como X-LDL-Auth-Token: ajksdlkjaksldjklajsdklkjasd*
-
-        Para otras rutas especifico que el verifier es el token verifier (OK)
-        Es el token otro autentication procedure? Si, es un procedure diferente
-
-        Cuando el login es exitoso, como se crea el token ? Utilizando un token generator
-        */
+        if($this->authProcedure instanceof RequestSecretInterface){
+            $secret = $this->authProcedure->getSecretFromRequest($request);
+        }
 
         /**
          * User is authenticated
@@ -106,16 +106,20 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
             return null;
         }
 
-        /**
-         * Handle authentication
-         */
-        $this->authProcedure->handle($request, $response);
+        $user = $credentialsProvider->validate($userIdentifier, $secret);
+
+        if(null === $user){
+            /**
+             * Handle authentication
+             */
+            $this->authProcedure->handle($request, $response);
+        }
 
         /**
          * Successful login, if there's a token generator, generate it
          */
         if(null !== $this->tokenGenerator){
-            $this->tokenGenerator->create($response);
+            $this->tokenGenerator->create($user, $response);
         }
 
         return null;

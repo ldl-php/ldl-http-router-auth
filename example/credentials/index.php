@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
 use LDL\Http\Core\Request\Request;
 use LDL\Http\Core\Request\RequestInterface;
@@ -13,10 +13,17 @@ use LDL\Http\Router\Router;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Config\AuthConfigParser;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthHTTPBasicProcedure;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Http\AuthHttpProcedure;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\File\Plain\PlainFileCredentialsProvider;
 use LDL\Http\Router\Handler\Exception\Collection\ExceptionHandlerCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\FalseVerifier;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\PDO\LDLTokenPDOGenerator;
+use LDL\Http\Router\Handler\Exception\Handler\HttpRouteNotFoundExceptionHandler;
+use LDL\Http\Router\Handler\Exception\Handler\HttpMethodNotAllowedExceptionHandler;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Credentials\Token\LDLTokenProcedure;
 
 class Dispatcher implements RouteDispatcherInterface
 {
@@ -25,8 +32,6 @@ class Dispatcher implements RouteDispatcherInterface
         ResponseInterface $response
     )
     {
-        //return json_decode($request->getContent(), true);
-
         return [
             'age' => (int) $request->get('age'),
             'name' => $request->get('name')
@@ -37,20 +42,53 @@ class Dispatcher implements RouteDispatcherInterface
 /**
  * Create a provider repository which holds different authentication methods
  */
-$providers = new ProcedureRepository();
-$providers->append(new AuthHTTPBasicProcedure(new PlainFileCredentialsProvider('users.txt')));
+$procedures = new ProcedureRepository();
+
+$procedures->append(
+    new AuthHttpProcedure(
+        new PlainFileCredentialsProvider(
+            'users.txt'
+        ),
+        null,
+        true
+    )
+);
+
+/*
+$procedures->append(
+    new LDLTokenProcedure(
+        new PlainFileCredentialsProvider(
+            'users.txt'
+        )
+    )
+);
+*/
+
+$verifiers = new AuthVerifierRepository();
+$verifiers->append(new FalseVerifier());
+
+$dsn = 'mysql:host=localhost;dbname=ldl_auth';
+$pdo = new \PDO($dsn,'root', '123456',[
+    \PDO::ATTR_EMULATE_PREPARES => false,
+    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+]);
+
+$generators = new TokenGeneratorRepository();
+$generators->append(new LDLTokenPDOGenerator($pdo));
 
 /**
  * Add auth parsing capabilities to route factory
  */
 $parserCollection = new RouteConfigParserCollection();
-$parserCollection->append(new AuthConfigParser($providers));
+$parserCollection->append(new AuthConfigParser($procedures, $verifiers, $generators));
 
 /**
  * Add global exception handler which handles AuthenticationRequired
  */
 $exceptionHandlers = new ExceptionHandlerCollection();
 $exceptionHandlers->append(new AuthenticationExceptionHandler());
+$exceptionHandlers->append(new HttpRouteNotFoundExceptionHandler());
+$exceptionHandlers->append(new HttpMethodNotAllowedExceptionHandler());
 
 try {
     $response = new Response();
@@ -74,6 +112,6 @@ try {
     $router->dispatch()->send();
 
 }catch(\Exception $e){
-
+    echo $e->getMessage();
 }
 

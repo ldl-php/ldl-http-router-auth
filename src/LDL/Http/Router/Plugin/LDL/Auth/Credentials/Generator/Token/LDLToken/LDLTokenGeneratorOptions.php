@@ -1,11 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator;
+namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken;
 
 class LDLTokenGeneratorOptions
 {
-    private const DEFAULT_ALGORITHM = 'sha256';
-
     private const DEFAULT_APPLICATION = 'application';
 
     private const DEFAULT_HEADERS = [
@@ -15,14 +13,14 @@ class LDLTokenGeneratorOptions
     ];
 
     /**
-     * @var \DateInterval
+     * @var string
      */
-    private $expiresAt;
+    private $refreshEndpoint;
 
     /**
      * @var string
      */
-    private $algorithm;
+    private $expiresAt;
 
     /**
      * @var string
@@ -35,16 +33,13 @@ class LDLTokenGeneratorOptions
     private $headers;
 
     public function __construct(
-        string $algorithm = null,
+        string $refreshEndpoint=null,
         string $expiresAt = null,
         string $application = null,
         array $headers = null
     )
     {
-        $utcTZ = new \DateTimeZone("UTC");
-
-        $this->algorithm = $algorithm ?? self::DEFAULT_ALGORITHM;
-        $this->expiresAt = new \DateTime($expiresAt, $utcTZ) ?? new \DateTime("NOW", $utcTZ);
+        $this->refreshEndpoint = $refreshEndpoint;
         $this->application = $application ?? self::DEFAULT_APPLICATION;
         $this->headers = $headers ?? self::DEFAULT_HEADERS;
     }
@@ -54,15 +49,7 @@ class LDLTokenGeneratorOptions
      */
     public function getExpiresAt(): \DateInterval
     {
-        return $this->expiresAt;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAlgorithm(): string
-    {
-        return $this->algorithm;
+        return \DateInterval::createFromDateString($this->expiresAt ?? '+30 minutes');
     }
 
     /**
@@ -79,5 +66,10 @@ class LDLTokenGeneratorOptions
     public function getHeaders(): array
     {
         return $this->headers;
+    }
+
+    public function getRefreshEndpoint() : string
+    {
+        return $this->refreshEndpoint;
     }
 }

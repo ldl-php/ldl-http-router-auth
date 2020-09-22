@@ -2,7 +2,7 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Hash\Generator;
 
-interface HashGeneratorInterface
+interface RandomHashGeneratorInterface
 {
-    public function generate(string $algorithm) : string;
+    public function generate() : string;
 }

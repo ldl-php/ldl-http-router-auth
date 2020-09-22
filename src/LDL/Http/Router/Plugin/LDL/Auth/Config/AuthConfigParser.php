@@ -2,14 +2,14 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\LDLTokenGeneratorOptions;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\LDLTokenGeneratorOptions;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
-use LDL\Http\Router\Plugin\LDL\Auth\Verifier\AuthVerifierRepository;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserInterface;
 use LDL\Http\Router\Route\Route;
 use Psr\Container\ContainerInterface;
@@ -119,7 +119,7 @@ class AuthConfigParser implements RouteConfigParserInterface
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
-        $provider = $this->procedures->getProvider($procedure['namespace'], $procedure['name']);
+        $provider = $this->procedures->getProcedure($procedure['namespace'], $procedure['name']);
 
         return $provider ?? $this->procedures->getDefault();
     }
@@ -157,19 +157,6 @@ class AuthConfigParser implements RouteConfigParserInterface
             return null;
         }
 
-        $generator = $this->generators->getGenerator($token['generator']['namespace'], $token['generator']['name']);
-
-        if(array_key_exists('options', $token)){
-            $options = new LDLTokenGeneratorOptions(
-                $token['options']['algorithm'] ?? null,
-                $token['options']['expiresAt'] ?? null,
-                $token['options']['application'] ?? null,
-                $token['options']['headers'] ?? null
-            );
-
-            $generator->updateOptions($options);
-        }
-
-        return $generator;
+        return $this->generators->getGenerator($token['generator']['namespace'], $token['generator']['name']);
     }
 }

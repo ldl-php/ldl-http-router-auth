@@ -52,13 +52,6 @@ class AuthHttpProcedure extends AbstractAuthProcedure implements RequestKeyInter
         ResponseInterface $response
     ) : void
     {
-
-        $credentials = $this->getCredentialsProvider();
-
-        if(null !== $credentials->validate($this->getKeyFromRequest($request), $this->getSecretFromRequest($request))){
-            return;
-        }
-
         $response->getHeaderBag()
             ->set(
                 'WWW-Authenticate',
