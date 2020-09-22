@@ -3,6 +3,7 @@
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator;
 
 use LDL\Http\Core\Response\ResponseInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 
 interface TokenGeneratorInterface
 {
@@ -14,9 +15,10 @@ interface TokenGeneratorInterface
      * Must set corresponding token headers
      * @param array $user
      * @param ResponseInterface $response
+     * @param AuthProcedureInterface $authProcedure
      * @return string
      */
-    public function create(array $user, ResponseInterface $response) : string;
+    public function create(array $user, ResponseInterface $response, AuthProcedureInterface $authProcedure) : string;
 
-    public function destroy(array $user, ResponseInterface $response) : bool;
+    public function destroy(array $user, ResponseInterface $response, AuthProcedureInterface $authProcedure) : bool;
 }

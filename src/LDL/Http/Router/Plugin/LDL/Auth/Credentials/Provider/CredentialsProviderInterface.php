@@ -26,5 +26,9 @@ interface CredentialsProviderInterface
      * @param mixed ...$args
      * @return bool
      */
-    public function create(string $username, string $password, ...$args) : bool;
+    public function create(
+        string $username,
+        string $password=null,
+        ...$args
+    ) : bool;
 }

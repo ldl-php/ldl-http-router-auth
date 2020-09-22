@@ -1,0 +1,48 @@
+{
+  "routes": [
+    {
+      "name": "login",
+      "description": "Login endpoint",
+      "version": "1.0",
+      "url": {
+        "prefix": "login"
+      },
+      "request": {
+        "method": "get"
+      },
+      "dispatcher": {
+        "class": "Dispatcher"
+      }
+    },
+    {
+      "name": "verifier",
+      "description": "Login endpoint",
+      "version": "1.0",
+      "url": {
+        "prefix": "verifier"
+      },
+      "request": {
+        "method": "get"
+      },
+      "auth": {
+        "procedure": {
+          "namespace": "FacebookPlugin",
+          "name": "Credentials"
+        },
+        "verifier": {
+          "namespace": "LDLAuthPlugin",
+          "name": "False Verifier"
+        },
+        "token": {
+          "generator": {
+            "namespace": "LDLAuthPlugin",
+            "name": "LDLTokenPDOGenerator"
+          }
+        }
+      },
+      "dispatcher": {
+        "class": "Dispatcher"
+      }
+    }
+  ]
+}

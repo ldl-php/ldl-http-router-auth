@@ -62,7 +62,6 @@ abstract class AbstractAuthProcedure implements AuthProcedureInterface
         return $this;
     }
 
-
     protected function setCredentialsProvider(CredentialsProviderInterface $credentialsProvider) : self
     {
         $this->provider = $credentialsProvider;
@@ -75,16 +74,15 @@ abstract class AbstractAuthProcedure implements AuthProcedureInterface
         return $this;
     }
 
-    public function setName(string $name) : self
+    protected function setName(string $name) : self
     {
         $this->name = $name;
         return $this;
     }
 
-    public function setDescription(string $description) : self
+    protected function setDescription(string $description) : self
     {
         $this->description = $description;
         return $this;
     }
-
 }

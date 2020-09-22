@@ -95,7 +95,8 @@ class AuthConfigParser implements RouteConfigParserInterface
             $verifier,
             $tokenGenerator,
             $isActive,
-            $priority
+            $priority,
+            true
         );
 
         $route->getConfig()->getPreDispatchMiddleware()->append($preDispatch);

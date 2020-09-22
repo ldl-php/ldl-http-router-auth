@@ -5,7 +5,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\PDO\MySQ
 use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProvider;
 use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Cipher\Provider\CipherProviderOptions;
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\MySQL\AbstractCredentialsPDOProvider;
+use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\PDO\AbstractCredentialsPDOProvider;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\DuplicateUsernameException;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameAlreadyExistsException;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Exception\UsernameNotFoundException;
@@ -56,10 +56,14 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
 
         $pdo = $this->getConnection();
 
-        $stmt = $pdo->prepare('SELECT * FROM :tableName WHERE :userRowName = :username');
+        $sql = sprintf(
+            'SELECT * FROM `%s` WHERE `%s`=:username',
+            $this->table,
+            $this->userRowName
+        );
+
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([
-            ':tableName' => $this->table,
-            ':userRowName' => $this->userRowName,
             ':username' => $username
         ]);
 
@@ -71,28 +75,35 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
         return $stmt->rowCount() > 0 ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
     }
 
-    public function create(string $username, string $password, ...$args) : bool
+    public function create(
+        string $username,
+        string $password=null,
+        ...$args
+    ) : bool
     {
         if(null !== $this->fetch($username)){
             $msg = "Username {$username} already exists! In database table {$this->table}";
             throw new UsernameAlreadyExistsException($msg);
         }
 
-        $password = $this->cipherProvider->hash($password);
+        if(null !== $password){
+            $password = $this->cipherProvider->hash($password);
+        }
 
         $pdo = $this->getConnection();
 
-        $sql = 'INSERT INTO :tableName SET :userRowName=:username, :passwordRowName=:password, createdAt=:createdAt';
+        $sql = sprintf(
+            'INSERT INTO `%s` SET `%s`=:username, `%s`=:password, `createdAt`=NOW()',
+            $this->table,
+            $this->userRowName,
+            $this->passwordRowName
+        );
 
         $stmt = $pdo->prepare($sql);
 
         $stmt->execute([
-            ':tableName' => $this->table,
-            ':userRowName' => $this->userRowName,
             ':username' => $username,
-            ':passwordRowName' => $this->passwordRowName,
-            ':password' => $password,
-            ':createdAt' => new \DateTime('now', new \DateTimeZone('UTC'))
+            ':password' => $password
         ]);
 
         return true;
@@ -112,28 +123,32 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
         $newUsername = $username ?? $user[$this->userRowName];
         $newPassword = $password ?? $user[$this->passwordRowName];
 
-        $updatedAt = new \DateTime('now', new \DateTimeZone("UTC"));
-
         $pdo = $this->getConnection();
 
-        $sql = 'UPDATE :tableName SET :userRowName=:username, :passwordRowName=:password, updatedAt=:updatedAt WHERE id=:id';
+        $sql = sprintf(
+            'UPDATE `%s` SET `%s`=:username, `%s`=:password, `updatedAt`=:updatedAt WHERE `id`=:id',
+            $this->table,
+            $this->userRowName,
+            $this->passwordRowName
+        );
 
         $stmt = $pdo->prepare($sql);
 
         $stmt->execute([
             ':id' => $user['id'],
-            ':tableName' => $this->table,
-            ':userRowName' => $this->userRowName,
             ':username' => $newUsername,
-            ':passwordRowName' => $this->passwordRowName,
             ':password' => $newPassword,
-            ':updatedAt' => $updatedAt
+            ':updatedAt' => 'NOW()'
         ]);
     }
 
     public function validate(...$args): ?array
     {
         [$username, $password] = $args;
+
+        if(null === $password){
+            return null;
+        }
 
         $user = $this->fetch($username);
 
