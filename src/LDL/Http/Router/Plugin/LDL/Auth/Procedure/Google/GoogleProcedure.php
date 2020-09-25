@@ -89,7 +89,7 @@ class GoogleProcedure extends AbstractAuthProcedure implements RequestKeyInterfa
             throw new AuthenticationFailureException('Email is not verified');
         }
 
-        $this->userData = $user;
+        $this->userData = $user['response'];
 
         return $user['response']['email'];
     }
@@ -133,7 +133,7 @@ class GoogleProcedure extends AbstractAuthProcedure implements RequestKeyInterfa
             'access_token' => $accessToken
         ];
 
-        return $this->request($endpoint, $params, 'POST');
+        return $this->request($endpoint, $params, RequestInterface::HTTP_METHOD_POST);
     }
 
     private function request(string $endpoint, array $params, string $httpMethod)

@@ -2,7 +2,7 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\LDLTokenGeneratorOptions;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\AuthenticationInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
@@ -20,6 +20,11 @@ class AuthConfigParser implements RouteConfigParserInterface
     private const DEFAULT_PRIORITY = 1;
 
     /**
+     * @var AuthenticationInterface
+     */
+    private $authentication;
+
+    /**
      * @var ProcedureRepository
      */
     private $procedures;
@@ -35,11 +40,13 @@ class AuthConfigParser implements RouteConfigParserInterface
     private $generators;
 
     public function __construct(
+        AuthenticationInterface $authentication,
         ProcedureRepository $procedures,
         AuthVerifierRepository $verifiers,
         TokenGeneratorRepository $generators = null
     )
     {
+        $this->authentication = $authentication;
         $this->verifiers = $verifiers;
         $this->procedures = $procedures;
         $this->generators = $generators;
@@ -88,9 +95,13 @@ class AuthConfigParser implements RouteConfigParserInterface
             throw new Exception\MissingProcedureException($msg);
         }
 
+        $this->authentication->setProcedure($procedure)
+            ->setVerifier($verifier);
+
         $tokenGenerator = null !== $this->generators ? $this->getTokenGenerator($auth) : null;
 
         $preDispatch = new PreDispatch(
+            $this->authentication,
             $procedure,
             $verifier,
             $tokenGenerator,

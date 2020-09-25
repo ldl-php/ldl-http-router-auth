@@ -81,7 +81,7 @@ class FacebookProcedure extends AbstractAuthProcedure implements RequestKeyInter
             throw new AuthenticationFailureException('Email required');
         }
 
-        $this->userData = $user;
+        $this->userData = $user['response'];
 
         return $user['response']['email'];
     }

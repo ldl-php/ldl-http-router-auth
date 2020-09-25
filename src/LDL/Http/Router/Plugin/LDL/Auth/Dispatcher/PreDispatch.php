@@ -6,6 +6,8 @@ use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Dispatcher\FinalDispatcher;
 use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\AuthenticationInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\AuthInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
@@ -19,6 +21,11 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     private const NAME = 'Authentication';
     private const DEFAULT_IS_ACTIVE = true;
     private const DEFAULT_PRIORITY = 1;
+
+    /**
+     * @var AuthenticationInterface
+     */
+    private $authentication;
 
     /**
      * @var bool
@@ -51,6 +58,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
     private $autoRegister;
 
     public function __construct(
+        AuthenticationInterface $authentication,
         AuthProcedureInterface $authProcedure,
         AuthVerifierInterface $authVerifier,
         TokenGeneratorInterface $tokenGenerator=null,
@@ -59,6 +67,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         bool $autoRegister = false
     )
     {
+        $this->authentication = $authentication;
         $this->authProcedure = $authProcedure;
         $this->authVerifier = $authVerifier;
         $this->tokenGenerator = $tokenGenerator;
@@ -97,13 +106,20 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         $userIdentifier = null;
         $secret = null;
         $credentialsProvider = $this->authProcedure->getCredentialsProvider();
+        $dispatcher = $route->getConfig()->getDispatcher();
 
         if($this->authProcedure instanceof RequestKeyInterface) {
             $userIdentifier = $this->authProcedure->getKeyFromRequest($request);
         }
 
+        $this->authentication->setUser($userIdentifier);
+
         if($this->authProcedure instanceof RequestSecretInterface){
             $secret = $this->authProcedure->getSecretFromRequest($request);
+        }
+
+        if($dispatcher instanceof AuthInterface){
+            $dispatcher->setAuthentication($this->authentication);
         }
 
         /**

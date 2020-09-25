@@ -24,17 +24,32 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\PDO\LDL
 use LDL\Http\Router\Handler\Exception\Handler\HttpRouteNotFoundExceptionHandler;
 use LDL\Http\Router\Handler\Exception\Handler\HttpMethodNotAllowedExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Google\GoogleProcedure;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\Authentication;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\AuthenticationInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Auth\AuthInterface;
 
-class Dispatcher implements RouteDispatcherInterface
+$auth = new Authentication();
+
+class Dispatcher implements RouteDispatcherInterface, AuthInterface
 {
+    /**
+     * @var AuthenticationInterface
+     */
+    private $auth;
+
+    public function setAuthentication(AuthenticationInterface $authentication) : AuthInterface
+    {
+        $this->auth = $authentication;
+        return $this;
+    }
+
     public function dispatch(
         RequestInterface $request,
         ResponseInterface $response
     )
     {
         return [
-            'age' => (int) $request->get('age'),
-            'name' => $request->get('name')
+            'user' => $this->auth->getUser()
         ];
     }
 }
@@ -78,7 +93,7 @@ $generators->append(new LDLTokenPDOGenerator($pdo));
  * Add auth parsing capabilities to route factory
  */
 $parserCollection = new RouteConfigParserCollection();
-$parserCollection->append(new AuthConfigParser($procedures, $verifiers, $generators));
+$parserCollection->append(new AuthConfigParser($auth, $procedures, $verifiers, $generators));
 
 /**
  * Add global exception handler which handles AuthenticationRequired
@@ -115,8 +130,8 @@ try {
 ?>
 
 <html>
-    <body>
-        <a href="<?php echo $googleProcedure->getAuthorizationEndpoint(); ?>">Login Google</a>
-    </body>
+<body>
+<a href="<?php echo $googleProcedure->getAuthorizationEndpoint(); ?>">Login Google</a>
+</body>
 </html>
 
