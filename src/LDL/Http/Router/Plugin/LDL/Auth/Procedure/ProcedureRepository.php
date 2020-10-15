@@ -2,46 +2,26 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Procedure;
 
+use LDL\Type\Collection\Interfaces\Namespaceable\NamespaceableInterface;
+use LDL\Type\Collection\Traits\Namespaceable\NamespaceableTrait;
 use LDL\Type\Collection\Types\Object\ObjectCollection;
-use LDL\Type\Exception\TypeMismatchException;
+use LDL\Type\Collection\Types\Object\Validator\InterfaceComplianceItemValidator;
 
-class ProcedureRepository extends ObjectCollection
+class ProcedureRepository extends ObjectCollection implements NamespaceableInterface
 {
-    public function validateItem($item): void
+    use NamespaceableTrait;
+
+    public function __construct(iterable $items = null)
     {
-        parent::validateItem($item);
-
-        if($item instanceof AuthProcedureInterface){
-            return;
-        }
-
-        $msg = sprintf(
-            'Item must implement: "%s", instance of "%s" was given',
-            AuthProcedureInterface::class,
-            get_class($item)
-        );
-
-        throw new TypeMismatchException($msg);
+        parent::__construct($items);
+        $this->getValidatorChain()
+            ->append(new InterfaceComplianceItemValidator(AuthProcedureInterface::class))
+            ->lock();
     }
 
     public function getDefault() : ?AuthProcedureInterface
     {
 
-    }
-
-    public function getProcedure(string $namespace, string $name) : ?AuthProcedureInterface
-    {
-        /**
-         * @var AuthProcedureInterface $procedure
-         */
-        foreach($this as $procedure){
-            if($procedure->getNamespace() === $namespace && $procedure->getName() === $name){
-                return $procedure;
-            }
-        }
-
-        $msg = "Authentication procedure with namespace: \"$namespace\" and name: \"$name\" could not be found!";
-        throw new Exception\AuthenticationProcedureNotFound($msg);
     }
 
 }

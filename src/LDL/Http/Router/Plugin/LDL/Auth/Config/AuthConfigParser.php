@@ -120,7 +120,11 @@ class AuthConfigParser implements RouteConfigParserInterface
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
-        $provider = $this->procedures->getProcedure($procedure['namespace'], $procedure['name']);
+        /**
+         * @var AuthProcedureInterface|null $provider
+         */
+        $provider = $this->procedures
+            ->filterByNamespaceAndName($procedure['namespace'], $procedure['name']);
 
         return $provider ?? $this->procedures->getDefault();
     }
@@ -143,7 +147,16 @@ class AuthConfigParser implements RouteConfigParserInterface
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
-        return $this->verifiers->getVerifier($verifier['namespace'], $verifier['name']);
+        /**
+         * @var AuthVerifierInterface $result
+         */
+        $result = $this->verifiers
+            ->filterByNamespaceAndName(
+                $verifier['namespace'],
+                $verifier['name']
+            );
+
+        return $result;
     }
 
     private function getTokenGenerator(array $auth) : ?TokenGeneratorInterface
@@ -158,6 +171,15 @@ class AuthConfigParser implements RouteConfigParserInterface
             return null;
         }
 
-        return $this->generators->getGenerator($token['generator']['namespace'], $token['generator']['name']);
+        /**
+         * @var TokenGeneratorInterface $generator
+         */
+        $generator = $this->generators
+            ->filterByNamespaceAndName(
+                $token['generator']['namespace'],
+                $token['generator']['name']
+            );
+
+        return $generator;
     }
 }

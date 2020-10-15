@@ -23,14 +23,13 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorReposito
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\PDO\LDLTokenPDOGenerator;
 use LDL\Http\Router\Handler\Exception\Handler\HttpRouteNotFoundExceptionHandler;
 use LDL\Http\Router\Handler\Exception\Handler\HttpMethodNotAllowedExceptionHandler;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Credentials\Token\LDLTokenProcedure;
 
 class Dispatcher implements RouteDispatcherInterface
 {
     public function dispatch(
         RequestInterface $request,
         ResponseInterface $response
-    )
+    ) : array
     {
         return [
             'age' => (int) $request->get('age'),

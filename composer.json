@@ -11,6 +11,8 @@
         "guzzlehttp/guzzle": "^7.1"
     },
     "license": "MIT",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "authors": [
         {
             "name": "Federico Stange",

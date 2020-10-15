@@ -10,6 +10,7 @@ define('APP_ID', '');
 define('APP_SECRET', '');
 
 $dsn = 'mysql:host=localhost;dbname=ldl_auth';
+
 $pdo = new \PDO($dsn,'root', '',[
     \PDO::ATTR_EMULATE_PREPARES => false,
     \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
