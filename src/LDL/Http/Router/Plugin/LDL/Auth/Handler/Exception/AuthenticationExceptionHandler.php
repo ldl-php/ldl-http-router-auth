@@ -43,7 +43,7 @@ class AuthenticationExceptionHandler implements ExceptionHandlerInterface
         return true;
     }
 
-    public function handle(Router $router, \Exception $e): ?int
+    public function handle(Router $router, \Exception $e, string $context): ?int
     {
         if($e instanceof AuthenticationRequiredException){
             return ResponseInterface::HTTP_CODE_UNAUTHORIZED;

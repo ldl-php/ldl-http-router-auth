@@ -24,7 +24,7 @@ class PlainFileCredentialsProviderOptions implements PlainFileCredentialsProvide
         CipherProviderInterface $cipherProvider = null
     )
     {
-        $this->separator = $separator ?? PlainFileCredentialsProviderOptionsInterface::SEPARATOR_DEFAULT;
+        $this->separator = $separator ?? self::SEPARATOR_DEFAULT;
         $this->cipherProvider = $cipherProvider ?? new CipherProvider(new CipherProviderOptions(CipherProviderOptionsInterface::PLAIN_TEXT));
     }
 

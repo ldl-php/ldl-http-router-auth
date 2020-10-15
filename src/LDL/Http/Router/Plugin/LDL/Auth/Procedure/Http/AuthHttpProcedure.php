@@ -37,14 +37,14 @@ class AuthHttpProcedure extends AbstractAuthProcedure implements RequestKeyInter
         $this->options = $options ?? new AuthHttpProcedureOptions();
     }
 
-    public function getSecretFromRequest(RequestInterface $request): ?string
-    {
-        return $request->get('password');
-    }
-
     public function getKeyFromRequest(RequestInterface $request): ?string
     {
-        return $request->get('user');
+        return $request->getHeaderBag()->get('php-auth-user');
+    }
+
+    public function getSecretFromRequest(RequestInterface $request): ?string
+    {
+        return $request->getHeaderBag()->get('php-auth-pw');
     }
 
     public function handle(

@@ -68,7 +68,7 @@ class MySQLCredentialsProvider extends AbstractCredentialsPDOProvider
         ]);
 
         if($stmt->rowCount() > 1){
-            $msg = "Duplicate username found, usernames must be unique! In database table {$this->table}";
+            $msg = "Duplicate username found, user names must be unique! In database table {$this->table}";
             throw new DuplicateUsernameException($msg);
         }
 

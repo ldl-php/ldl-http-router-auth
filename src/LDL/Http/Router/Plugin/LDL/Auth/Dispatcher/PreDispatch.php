@@ -4,8 +4,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Dispatcher;
 
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\ResponseInterface;
-use LDL\Http\Router\Dispatcher\FinalDispatcher;
-use LDL\Http\Router\Middleware\PreDispatchMiddlewareInterface;
+use LDL\Http\Router\Middleware\MiddlewareInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
@@ -13,7 +12,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
 use LDL\Http\Router\Route\Route;
 
-class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
+class PreDispatch implements MiddlewareInterface
 {
     private const NAMESPACE = 'LDLPlugin';
     private const NAME = 'Authentication';
@@ -92,7 +91,7 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
         RequestInterface $request,
         ResponseInterface $response,
         array $urlArguments = []
-    ) :?string
+    ) :?array
     {
         $userIdentifier = null;
         $secret = null;
@@ -106,10 +105,10 @@ class PreDispatch implements PreDispatchMiddlewareInterface, FinalDispatcher
             $secret = $this->authProcedure->getSecretFromRequest($request);
         }
 
-        /**
-         * User is authenticated
-         */
         if(null !== $userIdentifier && $this->authVerifier->isAuthenticated($userIdentifier)){
+            /**
+             * User is authenticated
+             */
             return null;
         }
 

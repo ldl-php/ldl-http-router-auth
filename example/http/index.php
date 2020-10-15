@@ -38,6 +38,12 @@ class Dispatcher implements RouteDispatcherInterface
  * Create a provider repository which holds different authentication methods
  */
 $providers = new ProcedureRepository();
+
+/**
+ * In this case we append a PlainFileCredentialsProvider with no ciphering options
+ * You can check the users.txt in this very same folder to get valid login credentials.
+ */
+
 $providers->append(
     new AuthHttpProcedure(
         new PlainFileCredentialsProvider(
@@ -48,17 +54,40 @@ $providers->append(
     )
 );
 
+/**
+ * Create the auth verifier repository, this repository holds distinct authentication verifiers
+ * to validate authentication in subsequent requests.
+ */
 $verifiers = new AuthVerifierRepository();
+
+/**
+ * In this case we only add the false verifier, since by default HTTP Basic authentication requires
+ * username and password for every request.
+ *
+ * It's important to note that this statement here doesn't selects the authentication verifier, it just appends
+ * a verifier to the collection.
+ *
+ * The task of selecting the authentication verifier depends on the route configuration.
+ *
+ * See file ./routes.json
+ */
 $verifiers->append(new FalseVerifier());
 
 /**
- * Add auth parsing capabilities to route factory
+ * Add auth configuration parsing capabilities to route factory
+ *
+ * This basically adds the capability to the route factory to be able to parse specific authentication configuration
+ * directives in the routes.json file.
+ *
+ * For example, which authentication verifier should be used to validate if a request is already authenticated or not.
+ *
  */
 $parserCollection = new RouteConfigParserCollection();
 $parserCollection->append(new AuthConfigParser($providers, $verifiers));
 
 /**
- * Add global exception handler which handles AuthenticationRequired
+ * Add global exception handler which handles AuthenticationRequired exceptions
+ * This handler is in charge of responding 401 or 403, depending on which exception is thrown.
  */
 $exceptionHandlers = new ExceptionHandlerCollection();
 $exceptionHandlers->append(new AuthenticationExceptionHandler());
@@ -85,6 +114,6 @@ try {
     $router->dispatch()->send();
 
 }catch(\Exception $e){
-
+    echo $e->getMessage();
 }
 

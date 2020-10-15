@@ -25,6 +25,8 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
     {
         [$username] = $args;
 
+        $return = null;
+
         $fp = fopen($this->getFile()->getRealPath(), 'rb');
 
         while($line = fgets($fp))
@@ -37,22 +39,24 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
             }
 
             $user = substr($line, 0, $needle);
-            $pass = substr($line, $needle+1);
+            $pass = trim(substr($line, $needle+1),"\n");
 
             if($username === $user){
-                return [
+                $return = [
                     'user' => $user,
                     'password' => $pass
                 ];
+
+                break;
             }
         }
 
         fclose($fp);
 
-        return null;
+        return $return;
     }
 
-    public function create(string $username, string $password, ...$args) : bool
+    public function create(string $username, string $password=null, ...$args) : bool
     {
         $return = true;
 
@@ -82,16 +86,16 @@ class PlainFileCredentialsProvider extends AbstractCredentialsFileProvider
     {
         [$username, $password] = $args;
 
-        if(null === $password){
+        if(null === $username || null === $password){
             return null;
         }
 
         $user = $this->fetch($username);
 
-        if($user && $this->options->getCipherProvider()->compare($password, $user['password'])){
-            return $user;
+        if(null === $user){
+            return null;
         }
 
-        return null;
+        return $this->options->getCipherProvider()->compare($password, $user['password']) ? $user : null;
     }
 }

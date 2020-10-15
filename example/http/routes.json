@@ -6,7 +6,7 @@
         "prefix": "login"
       },
       "request": {
-        "method": "post"
+        "method": "get"
       },
       "auth": {
         "procedure": {
@@ -32,31 +32,6 @@
       "dispatcher": {
         "class": "Dispatcher"
       }
-    },
-    {
-      "version": "1.0",
-      "url": {
-        "prefix": "token"
-      },
-      "request": {
-        "method": "get"
-      },
-      "auth": {
-        "procedure": {
-          "namespace": "LDLAuthPlugin",
-          "name": "Token Procedure"
-        },
-        "verifier": {
-          "namespace": "LDLAuthPlugin",
-          "name": "Token Verifier"
-        }
-      },
-      "name": "token",
-      "description": "Validates token authentication",
-      "dispatcher": {
-        "class": "Dispatcher"
-      }
     }
-
   ]
 }

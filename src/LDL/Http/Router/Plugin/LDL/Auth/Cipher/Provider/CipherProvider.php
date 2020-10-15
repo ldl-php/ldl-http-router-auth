@@ -21,7 +21,11 @@ class CipherProvider implements CipherProviderInterface
 
     public function compare(string $text, string $password) : bool
     {
-        return $this->options->getCipher() === CipherProviderOptionsInterface::PLAIN_TEXT ? $text === $password : \password_verify($text, $password);
+        if($this->options->getCipher() === CipherProviderOptionsInterface::PLAIN_TEXT){
+            return $text === $password;
+        }
+
+        return \password_verify($text, $password);
     }
 
     public function getOptions() : CipherProviderOptionsInterface
