@@ -27,10 +27,16 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Facebook\FacebookProcedure;
 
 class Dispatcher implements RouteDispatcherInterface
 {
+
+    public function __construct(ProcedureRepository $repository)
+    {
+        $this->procedures = $repository;
+    }
+
     public function dispatch(
         RequestInterface $request,
         ResponseInterface $response
-    )
+    ) : array
     {
         return [
             'age' => (int) $request->get('age'),

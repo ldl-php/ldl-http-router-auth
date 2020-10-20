@@ -2,16 +2,17 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Config;
 
-use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken\LDLTokenGeneratorOptions;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
+use LDL\Http\Router\Plugin\LDL\Auth\Procedure\NeedsProcedureRepositoryInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserInterface;
 use LDL\Http\Router\Route\Route;
+use LDL\Http\Router\Route\RouteInterface;
 use Psr\Container\ContainerInterface;
 
 class AuthConfigParser implements RouteConfigParserInterface
@@ -47,11 +48,18 @@ class AuthConfigParser implements RouteConfigParserInterface
 
     public function parse(
         array $data,
-        Route $route,
+        RouteInterface $route,
         ContainerInterface $container = null,
         string $file = null
     ): void
     {
+
+        $dispatcher = $route->getConfig()->getDispatcher();
+
+        if($dispatcher instanceof NeedsProcedureRepositoryInterface) {
+            $dispatcher->setProcedureRepository($this->procedures);
+        }
+
         /**
          * If auth key does not exists in the route configuration
          * assume no authentication is required.
@@ -84,7 +92,7 @@ class AuthConfigParser implements RouteConfigParserInterface
         $procedure = $this->getProcedure($auth);
 
         if(null === $procedure){
-            $msg = 'Missing authentication procedure, and no default authentication procedure was found';
+            $msg = 'Missing authentication procedure';
             throw new Exception\MissingProcedureException($msg);
         }
 
@@ -102,6 +110,8 @@ class AuthConfigParser implements RouteConfigParserInterface
         $route->getConfig()->getPreDispatchMiddleware()->append($preDispatch);
     }
 
+    //<editor-fold desc="Private methods">
+
     private function getProcedure(array $auth) : ?AuthProcedureInterface
     {
         if(!array_key_exists('procedure', $auth)) {
@@ -110,23 +120,21 @@ class AuthConfigParser implements RouteConfigParserInterface
 
         $procedure = $auth['procedure'];
 
-        if(!array_key_exists('namespace', $procedure)) {
-            $msg = 'On auth section, missing namespace';
-            throw new Exception\AuthConfigParserSectionException($msg);
-        }
+        if(!is_string($procedure)) {
+            $msg = sprintf(
+                'Auth procedure must be a string, "%s" was given',
+                gettype($procedure)
+            );
 
-        if(!array_key_exists('name', $procedure)) {
-            $msg = 'On auth section, missing name';
             throw new Exception\AuthConfigParserSectionException($msg);
         }
 
         /**
          * @var AuthProcedureInterface|null $provider
          */
-        $provider = $this->procedures
-            ->filterByNamespaceAndName($procedure['namespace'], $procedure['name']);
+        $this->procedures->select($procedure);
 
-        return $provider ?? $this->procedures->getDefault();
+        return $this->procedures->getSelectedItem();
     }
 
     private function getVerifier(array $auth) : ?AuthVerifierInterface
@@ -137,26 +145,23 @@ class AuthConfigParser implements RouteConfigParserInterface
 
         $verifier = $auth['verifier'];
 
-        if(!array_key_exists('namespace', $verifier)) {
-            $msg = 'On auth section verifier, missing namespace';
-            throw new Exception\AuthConfigParserSectionException($msg);
-        }
-
-        if(!array_key_exists('name', $verifier)) {
-            $msg = 'On auth section verifier, missing name';
-            throw new Exception\AuthConfigParserSectionException($msg);
-        }
-
-        /**
-         * @var AuthVerifierInterface $result
-         */
-        $result = $this->verifiers
-            ->filterByNamespaceAndName(
-                $verifier['namespace'],
-                $verifier['name']
+        if(!is_string($verifier)) {
+            $msg = sprintf(
+                'Auth verifier must be a string, "%s" was given',
+                gettype($verifier)
             );
 
-        return $result;
+            throw new Exception\AuthConfigParserSectionException($msg);
+        }
+
+        $this->verifiers->select($verifier);
+
+        /**
+         * @var AuthVerifierInterface $return
+         */
+        $return = $this->verifiers->getSelectedItem();
+
+        return $return;
     }
 
     private function getTokenGenerator(array $auth) : ?TokenGeneratorInterface
@@ -182,4 +187,5 @@ class AuthConfigParser implements RouteConfigParserInterface
 
         return $generator;
     }
+    //</editor-fold>
 }

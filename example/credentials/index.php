@@ -53,16 +53,6 @@ $procedures->append(
     )
 );
 
-/*
-$procedures->append(
-    new LDLTokenProcedure(
-        new PlainFileCredentialsProvider(
-            'users.txt'
-        )
-    )
-);
-*/
-
 $verifiers = new AuthVerifierRepository();
 $verifiers->append(new FalseVerifier());
 

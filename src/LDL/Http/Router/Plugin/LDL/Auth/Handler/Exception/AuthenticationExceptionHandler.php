@@ -7,6 +7,7 @@ use LDL\Http\Router\Handler\Exception\ExceptionHandlerInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 use LDL\Http\Router\Router;
+use Symfony\Component\HttpFoundation\ParameterBag;
 
 class AuthenticationExceptionHandler implements ExceptionHandlerInterface
 {
@@ -43,7 +44,12 @@ class AuthenticationExceptionHandler implements ExceptionHandlerInterface
         return true;
     }
 
-    public function handle(Router $router, \Exception $e, string $context): ?int
+    public function handle(
+        Router $router,
+        \Exception $e,
+        string $context,
+        ParameterBag $urlParameters = null
+    ): ?int
     {
         if($e instanceof AuthenticationRequiredException){
             return ResponseInterface::HTTP_CODE_UNAUTHORIZED;

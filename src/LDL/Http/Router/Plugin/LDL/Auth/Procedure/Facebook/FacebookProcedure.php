@@ -68,6 +68,12 @@ class FacebookProcedure extends AbstractAuthProcedure implements RequestKeyInter
 
     public function getKeyFromRequest(RequestInterface $request): ?string
     {
+        $code = $request->get('code','');
+
+        if('' === $code){
+            return null;
+        }
+
         $accessToken = $this->getTokenEndpointForCode($request->get('code'));
 
         if(empty($accessToken)){
@@ -77,6 +83,7 @@ class FacebookProcedure extends AbstractAuthProcedure implements RequestKeyInter
         $user = $this->getUserInformation($accessToken['response']['access_token']);
 
         $this->userData = $user;
+
         return $user['response']['email'];
     }
 

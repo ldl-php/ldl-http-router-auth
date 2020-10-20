@@ -1,38 +1,46 @@
 {
   "routes": [
     {
-      "name": "login",
+      "name": "Login",
       "description": "Login endpoint",
       "version": "1.0",
       "url": {
-        "prefix": "login"
+        "prefix": "index"
       },
       "request": {
         "method": "get"
       },
       "dispatcher": {
         "class": "Dispatcher"
+      },
+      "response": {
+        "parser": "ldl.response.parser.template",
+        "template": {
+          "engine": "template.engine.php",
+          "codes": {
+            "200-299": {
+              "file": "login.php"
+            }
+          }
+        }
       }
     },
     {
-      "name": "verifier",
-      "description": "Login endpoint",
+      "name": "Login Verification",
+      "description": "Verifies facebook token",
       "version": "1.0",
       "url": {
-        "prefix": "verifier"
+        "prefix": "verify"
       },
       "request": {
         "method": "get"
       },
+      "dispatcher": {
+        "class": "LoginSuccess"
+      },
       "auth": {
-        "procedure": {
-          "namespace": "FacebookPlugin",
-          "name": "Credentials"
-        },
-        "verifier": {
-          "namespace": "LDLAuthPlugin",
-          "name": "False Verifier"
-        },
+        "procedure": "facebook.oauth2",
+        "verifier": "verifier.false",
         "token": {
           "generator": {
             "namespace": "LDLAuthPlugin",
@@ -40,8 +48,16 @@
           }
         }
       },
-      "dispatcher": {
-        "class": "Dispatcher"
+      "response": {
+        "parser": "ldl.response.parser.template",
+        "template": {
+          "engine": "template.engine.php",
+          "codes": {
+            "200-299": {
+              "file": "success.php"
+            }
+          }
+        }
       }
     }
   ]

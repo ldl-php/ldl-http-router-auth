@@ -3,13 +3,16 @@
 namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier;
 
 use LDL\Type\Collection\Interfaces\Namespaceable\NamespaceableInterface;
+use LDL\Type\Collection\Interfaces\Selection\SingleSelectionInterface;
 use LDL\Type\Collection\Traits\Namespaceable\NamespaceableTrait;
+use LDL\Type\Collection\Traits\Selection\SingleSelectionTrait;
 use LDL\Type\Collection\Types\Object\ObjectCollection;
 use LDL\Type\Collection\Types\Object\Validator\InterfaceComplianceItemValidator;
 
-class AuthVerifierRepository extends ObjectCollection implements NamespaceableInterface
+class AuthVerifierRepository extends ObjectCollection implements NamespaceableInterface, SingleSelectionInterface
 {
     use NamespaceableTrait;
+    use SingleSelectionTrait;
 
     public function __construct(iterable $items = null)
     {
