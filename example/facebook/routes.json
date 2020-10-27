@@ -5,7 +5,7 @@
       "description": "Login endpoint",
       "version": "1.0",
       "url": {
-        "prefix": "index"
+        "prefix": "facebook"
       },
       "request": {
         "method": "get"
@@ -40,7 +40,7 @@
       },
       "auth": {
         "procedure": "facebook.oauth2",
-        "verifier": "verifier.false",
+        "verifier": "facebook.verifier",
         "token": {
           "generator": {
             "namespace": "LDLAuthPlugin",

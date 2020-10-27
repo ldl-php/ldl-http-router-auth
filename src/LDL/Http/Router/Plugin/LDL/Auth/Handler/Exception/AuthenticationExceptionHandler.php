@@ -3,15 +3,14 @@
 namespace LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception;
 
 use LDL\Http\Core\Response\ResponseInterface;
-use LDL\Http\Router\Handler\Exception\ExceptionHandlerInterface;
+use LDL\Http\Router\Handler\Exception\AbstractExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationRequiredException;
 use LDL\Http\Router\Router;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
-class AuthenticationExceptionHandler implements ExceptionHandlerInterface
+class AuthenticationExceptionHandler extends AbstractExceptionHandler
 {
-
     /**
      * @return string
      */

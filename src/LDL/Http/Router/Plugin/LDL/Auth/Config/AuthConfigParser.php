@@ -6,6 +6,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorInterfac
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\TokenGeneratorRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
+use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\NeedsProcedureRepositoryInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
@@ -51,21 +52,33 @@ class AuthConfigParser implements RouteConfigParserInterface
         RouteInterface $route,
         ContainerInterface $container = null,
         string $file = null
-    ): void
+    ) : void
     {
-
-        $dispatcher = $route->getConfig()->getDispatcher();
-
-        if($dispatcher instanceof NeedsProcedureRepositoryInterface) {
-            $dispatcher->setProcedureRepository($this->procedures);
-        }
-
         /**
          * If auth key does not exists in the route configuration
          * assume no authentication is required.
          */
         if(!array_key_exists('auth', $data)){
             return;
+        }
+
+        /**
+         * Add exception handler for authentication
+         * Arguments such as exception handler priority could come from the config array
+         */
+        $route->getRouter()
+            ->getExceptionHandlerCollection()
+            ->append(new AuthenticationExceptionHandler(
+                'LDLAuth',
+                'AuthExceptionHandler',
+                1,
+                true
+            ));
+
+        $dispatcher = $route->getConfig()->getDispatcher();
+
+        if($dispatcher instanceof NeedsProcedureRepositoryInterface) {
+            $dispatcher->setProcedureRepository($this->procedures);
         }
 
         $auth = $data['auth'];

@@ -11,6 +11,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
 use LDL\Http\Router\Route\Route;
+use LDL\Http\Router\Route\RouteInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 class PreDispatch implements MiddlewareInterface
@@ -88,7 +89,7 @@ class PreDispatch implements MiddlewareInterface
     }
 
     public function dispatch(
-        Route $route,
+        RouteInterface $route,
         RequestInterface $request,
         ResponseInterface $response,
         ParameterBag $urlParameters = null
