@@ -12,8 +12,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\UserDataInterface;
 
 class LDLTokenPDOGenerator implements TokenGeneratorInterface
 {
-    private const NAMESPACE = 'LDLAuthPlugin';
-    private const NAME = 'LDLTokenPDOGenerator';
+    private const NAME = 'ldl.auth.token.pdo.generator';
 
     private const DEFAULT_TABLE = 'ldl_auth_token';
 
@@ -50,11 +49,6 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
         $this->options = $options ?? new LDLTokenGeneratorOptions('/auth/token/refresh');
     }
 
-    public function getNamespace(): string
-    {
-        return self::NAMESPACE;
-    }
-
     public function getName(): string
     {
         return self::NAME;
@@ -86,7 +80,7 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
         $headers = $this->options->getHeaders();
 
         $sql = sprintf(
-            'INSERT INTO `%s` SET `user`=:user, `token`=:token, `createdAt`=:createdAt, `expiresAt`=:expiresAt, `provider_namespace`=:providerNamespace, `provider_name`=:providerName, `provider_data`=:providerData',
+            'INSERT INTO `%s` SET `user`=:user, `token`=:token, `createdAt`=:createdAt, `expiresAt`=:expiresAt, `provider_name`=:providerName, `provider_data`=:providerData',
             $this->tableName
         );
 
@@ -107,7 +101,6 @@ class LDLTokenPDOGenerator implements TokenGeneratorInterface
             ':user' => $user['user'],
             ':createdAt' => $now->format('Y-m-d H:i:s'),
             ':expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
-            ':providerNamespace' => $authProcedure->getNamespace(),
             ':providerName' => $authProcedure->getName(),
             ':providerData' => $extraData
         ]);

@@ -5,7 +5,7 @@ namespace LDL\Http\Router\Plugin\LDL\Auth\Credentials\Generator\Token\LDLToken;
 class LDLTokenGeneratorOptions
 {
     private const DEFAULT_APPLICATION = 'application';
-
+    private const DEFAULT_EXPIRES_AT = '+30 minutes';
     private const DEFAULT_HEADERS = [
         'token' => 'X-LDL-Auth-Token',
         'refresh' => 'X-LDL-Token-Refresh',
@@ -40,6 +40,7 @@ class LDLTokenGeneratorOptions
     )
     {
         $this->refreshEndpoint = $refreshEndpoint;
+        $this->expiresAt = $expiresAt ?? self::DEFAULT_EXPIRES_AT;
         $this->application = $application ?? self::DEFAULT_APPLICATION;
         $this->headers = $headers ?? self::DEFAULT_HEADERS;
     }
@@ -49,7 +50,7 @@ class LDLTokenGeneratorOptions
      */
     public function getExpiresAt(): \DateInterval
     {
-        return \DateInterval::createFromDateString($this->expiresAt ?? '+30 minutes');
+        return \DateInterval::createFromDateString($this->expiresAt);
     }
 
     /**

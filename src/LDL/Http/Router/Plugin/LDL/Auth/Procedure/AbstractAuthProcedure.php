@@ -9,11 +9,6 @@ abstract class AbstractAuthProcedure implements AuthProcedureInterface
     /**
      * @var string
      */
-    private $namespace;
-
-    /**
-     * @var string
-     */
     private $name;
 
     /**
@@ -34,11 +29,6 @@ abstract class AbstractAuthProcedure implements AuthProcedureInterface
     public function isDefault() : bool
     {
         return $this->isDefault;
-    }
-
-    public function getNamespace() : string
-    {
-        return $this->namespace;
     }
 
     public function getName(): string
@@ -65,12 +55,6 @@ abstract class AbstractAuthProcedure implements AuthProcedureInterface
     protected function setCredentialsProvider(CredentialsProviderInterface $credentialsProvider) : self
     {
         $this->provider = $credentialsProvider;
-        return $this;
-    }
-
-    protected function setNamespace(string $namespace) : self
-    {
-        $this->namespace = $namespace;
         return $this;
     }
 

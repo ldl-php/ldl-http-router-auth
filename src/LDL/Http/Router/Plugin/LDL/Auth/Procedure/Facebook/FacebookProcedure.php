@@ -11,15 +11,13 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
 
 class FacebookProcedure extends AbstractAuthProcedure implements RequestKeyInterface
 {
-    public const NAMESPACE = 'FacebookPlugin';
-    public const NAME = 'Credentials';
+    public const NAME = 'ldl.auth.facebook.credentials.procedure';
     public const DESCRIPTION = 'Provides an authentication based on Facebook oauth';
 
     public function __construct(CredentialsProviderInterface $provider, bool $isDefault = false)
     {
         $this->setCredentialsProvider($provider)
             ->setDefault($isDefault)
-            ->setNamespace(self::NAMESPACE)
             ->setName(self::NAME)
             ->setDescription(self::DESCRIPTION);
     }

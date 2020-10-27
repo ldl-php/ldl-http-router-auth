@@ -13,8 +13,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
 
 class AuthHttpProcedure extends AbstractAuthProcedure implements RequestKeyInterface, RequestSecretInterface
 {
-    public const NAME = 'HTTP Basic Auth';
-
+    public const NAME = 'ldl.auth.http.basic.auth';
     public const DESCRIPTION = 'Provides HTTP basic authentication';
 
     /**
@@ -30,7 +29,6 @@ class AuthHttpProcedure extends AbstractAuthProcedure implements RequestKeyInter
     {
         $this->setCredentialsProvider($provider)
             ->setDefault($isDefault)
-            ->setNamespace(AuthProcedureInterface::NAMESPACE)
             ->setName(self::NAME)
             ->setDescription(self::DESCRIPTION);
 

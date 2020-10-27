@@ -10,9 +10,7 @@
       "request": {
         "method": "get"
       },
-      "dispatcher": {
-        "class": "Dispatcher"
-      },
+      "dispatcher": "dispatcher",
       "response": {
         "parser": "ldl.response.parser.template",
         "template": {
@@ -30,22 +28,17 @@
       "description": "Verifies facebook token",
       "version": "1.0",
       "url": {
-        "prefix": "verify"
+        "prefix": "dialog/oauth"
       },
       "request": {
         "method": "get"
       },
-      "dispatcher": {
-        "class": "LoginSuccess"
-      },
+      "dispatcher": "login.success.dispatcher",
       "auth": {
         "procedure": "facebook.oauth2",
         "verifier": "facebook.verifier",
         "token": {
-          "generator": {
-            "namespace": "LDLAuthPlugin",
-            "name": "LDLTokenPDOGenerator"
-          }
+          "generator": "ldl.auth.token.pdo.generator"
         }
       },
       "response": {

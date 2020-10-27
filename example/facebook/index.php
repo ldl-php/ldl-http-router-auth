@@ -6,13 +6,13 @@ use LDL\Http\Core\Request\Request;
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\Response;
 use LDL\Http\Core\Response\ResponseInterface;
-use LDL\Http\Router\Route\Dispatcher\RouteDispatcherInterface;
+use LDL\Http\Router\Middleware\AbstractMiddleware;
+use LDL\Http\Router\Route\RouteInterface;
 use LDL\Http\Router\Router;
 use LDL\Http\Router\Route\Factory\RouteFactory;
 use LDL\Http\Router\Route\Group\RouteGroup;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserCollection;
 use LDL\Http\Router\Plugin\LDL\Template\Config\TemplateConfigParser;
-use LDL\Http\Router\Plugin\LDL\Template\Repository\TemplateFileRepository;
 use LDL\Http\Router\Plugin\LDL\Template\Engine\Repository\TemplateEngineRepository;
 use LDL\Http\Router\Plugin\LDL\Template\Engine\PhpTemplateEngine;
 use LDL\Http\Router\Response\Parser\Repository\ResponseParserRepository;
@@ -22,11 +22,11 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Facebook\FacebookProcedure;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\Database\PDO\MySQL\MySQLCredentialsProvider;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Config\AuthConfigParser;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\NeedsProcedureRepositoryInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\FacebookAuthVerifier;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Client\FacebookClient;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\Facebook\FacebookClientOptions;
+use LDL\Http\Router\Plugin\LDL\Template\Finder\TemplateFileFinder;
 
 define('APP_ID', '');
 define('APP_SECRET', '');
@@ -38,19 +38,30 @@ $pdo = new \PDO($dsn,'root', '',[
     \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
 ]);
 
-class Dispatcher implements RouteDispatcherInterface, NeedsProcedureRepositoryInterface
+class Dispatcher extends AbstractMiddleware
 {
     /**
      * @var ProcedureRepository
      */
-    private $procedures;
+    private $repository;
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function getPriority(): int
+    {
+        return 1;
+    }
 
     public function setProcedureRepository(ProcedureRepository $repository)
     {
-        $this->procedures = $repository;
+        $this->repository = $repository;
     }
 
     public function dispatch(
+        RouteInterface $route,
         RequestInterface $request,
         ResponseInterface $response,
         ParameterBag $urlParameters = null
@@ -59,46 +70,71 @@ class Dispatcher implements RouteDispatcherInterface, NeedsProcedureRepositoryIn
         /**
          * @var FacebookProcedure $facebook
          */
-        $facebook = $this->procedures
-            ->filterByNamespaceAndName(FacebookProcedure::NAMESPACE, FacebookProcedure::NAME);
+        $facebook = $this->repository->offsetGet('facebook.oauth2');
 
         return [
-            'fb_login' => $facebook->getAuthorizationEndpoint()
+            'fb_login' => 'dialog/oauth'
         ];
     }
 
 }
 
-class LoginSuccess implements RouteDispatcherInterface, NeedsProcedureRepositoryInterface
+class LoginSuccess extends AbstractMiddleware
 {
     /**
      * @var ProcedureRepository
      */
-    private $procedures;
+    private $repository;
+
+    /**
+     * @var AuthVerifierRepository
+     */
+    private $verifier;
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function getPriority(): int
+    {
+        return 1;
+    }
 
     public function setProcedureRepository(ProcedureRepository $repository)
     {
-        $this->procedures = $repository;
+        $this->repository = $repository;
+    }
+
+    public function setVerifier(AuthVerifierRepository $verifier)
+    {
+        $this->verifier = $verifier;
     }
 
     public function dispatch(
+        RouteInterface $route,
         RequestInterface $request,
         ResponseInterface $response,
         ParameterBag $urlParameters = null
     ): ?array
     {
+
+        /**
+         * @var FacebookAuthVerifier $verifier
+         */
+        $verifier = $this->verifier->offsetGet('facebook.verifier');
+
         /**
          * @var FacebookProcedure $facebook
          */
-        $facebook = $this->procedures
-            ->filterByNamespaceAndName(FacebookProcedure::NAMESPACE, FacebookProcedure::NAME);
+        $facebook = $this->repository->offsetGet('facebook.oauth2');
 
-        return $facebook->getUserData()['response'];
+        return $verifier->getClient()->getUserData($facebook->getKeyFromRequest($request))['response'];
     }
 
 }
 
-$templateFileRepository = new TemplateFileRepository(__DIR__.'/template');
+$templateFileRepository = new TemplateFileFinder(__DIR__.'/template');
 $templateEngineRepository = new TemplateEngineRepository();
 
 $templateEngineRepository->append(new PhpTemplateEngine(),'template.engine.php');
@@ -140,7 +176,8 @@ $verifiers->append(
         new FacebookClient(
             new FacebookClientOptions(
                 APP_ID,
-                APP_SECRET
+                APP_SECRET,
+                'http://localhost:8080/login/v1.0/verify'
             )
         )
     ),
@@ -171,15 +208,25 @@ $parserCollection->append(
         )
     );
 
+$dispatcher = new Dispatcher('dispatcher');
+$dispatcher->setProcedureRepository($providers);
+
+$loginDispatcher = new LoginSuccess('login.success.dispatcher');
+$loginDispatcher->setProcedureRepository($providers);
+$loginDispatcher->setVerifier($verifiers);
 
 $response = new Response();
 
 $router = new Router(
     Request::createFromGlobals(),
     $response,
-    $exceptionHandlers,
+    null,
     $responseParserRepository
 );
+
+$router->getDispatcherChain()
+    ->append($dispatcher)
+    ->append($loginDispatcher);
 
 $routes = RouteFactory::fromJsonFile(
     __DIR__ . '/routes.json',
