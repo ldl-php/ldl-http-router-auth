@@ -8,13 +8,10 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\PreDispatch;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
-use LDL\Http\Router\Plugin\LDL\Auth\Procedure\NeedsProcedureRepositoryInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\ProcedureRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserInterface;
-use LDL\Http\Router\Route\Route;
 use LDL\Http\Router\Route\RouteInterface;
-use Psr\Container\ContainerInterface;
 
 class AuthConfigParser implements RouteConfigParserInterface
 {
@@ -50,7 +47,6 @@ class AuthConfigParser implements RouteConfigParserInterface
     public function parse(
         array $data,
         RouteInterface $route,
-        ContainerInterface $container = null,
         string $file = null
     ) : void
     {
@@ -68,18 +64,7 @@ class AuthConfigParser implements RouteConfigParserInterface
          */
         $route->getRouter()
             ->getExceptionHandlerCollection()
-            ->append(new AuthenticationExceptionHandler(
-                'LDLAuth',
-                'AuthExceptionHandler',
-                1,
-                true
-            ));
-
-        $dispatcher = $route->getConfig()->getDispatcher();
-
-        if($dispatcher instanceof NeedsProcedureRepositoryInterface) {
-            $dispatcher->setProcedureRepository($this->procedures);
-        }
+            ->append(new AuthenticationExceptionHandler(true, 1));
 
         $auth = $data['auth'];
 
@@ -193,9 +178,8 @@ class AuthConfigParser implements RouteConfigParserInterface
          * @var TokenGeneratorInterface $generator
          */
         $generator = $this->generators
-            ->filterByNamespaceAndName(
-                $token['generator']['namespace'],
-                $token['generator']['name']
+            ->filterByName(
+                $token['generator']
             );
 
         return $generator;

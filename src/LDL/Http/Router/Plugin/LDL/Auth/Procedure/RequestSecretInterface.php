@@ -6,11 +6,9 @@ use LDL\Http\Core\Request\RequestInterface;
 
 interface RequestSecretInterface
 {
-
     /**
      * @param RequestInterface $request
      * @return string|null
      */
     public function getSecretFromRequest(RequestInterface $request) : ?string;
-
 }

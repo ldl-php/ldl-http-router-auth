@@ -6,11 +6,9 @@ use LDL\Http\Core\Request\RequestInterface;
 
 interface RequestKeyInterface
 {
-
     /**
      * @param RequestInterface $request
      * @return string|null
      */
     public function getKeyFromRequest(RequestInterface $request) : ?string;
-
 }

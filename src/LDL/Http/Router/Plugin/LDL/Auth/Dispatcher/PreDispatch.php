@@ -10,14 +10,12 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestKeyInterface;
 use LDL\Http\Router\Plugin\LDL\Auth\Procedure\RequestSecretInterface;
-use LDL\Http\Router\Route\Route;
 use LDL\Http\Router\Route\RouteInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 class PreDispatch implements MiddlewareInterface
 {
-    private const NAMESPACE = 'LDLPlugin';
-    private const NAME = 'Authentication';
+    private const NAME = 'ldl.auth.authentication';
     private const DEFAULT_IS_ACTIVE = true;
     private const DEFAULT_PRIORITY = 1;
 
@@ -66,11 +64,6 @@ class PreDispatch implements MiddlewareInterface
         $this->isActive = $isActive ?? self::DEFAULT_IS_ACTIVE;
         $this->priority = $priority ?? self::DEFAULT_PRIORITY;
         $this->autoRegister = $autoRegister;
-    }
-
-    public function getNamespace(): string
-    {
-        return self::NAMESPACE;
     }
 
     public function getName(): string

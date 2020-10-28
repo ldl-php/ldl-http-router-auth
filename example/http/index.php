@@ -6,9 +6,9 @@ use LDL\Http\Core\Request\Request;
 use LDL\Http\Core\Request\RequestInterface;
 use LDL\Http\Core\Response\Response;
 use LDL\Http\Core\Response\ResponseInterface;
-use LDL\Http\Router\Route\Dispatcher\RouteDispatcherInterface;
 use LDL\Http\Router\Route\Factory\RouteFactory;
 use LDL\Http\Router\Route\Group\RouteGroup;
+use LDL\Http\Router\Route\RouteInterface;
 use LDL\Http\Router\Router;
 use LDL\Http\Router\Route\Config\Parser\RouteConfigParserCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Config\AuthConfigParser;
@@ -19,13 +19,27 @@ use LDL\Http\Router\Handler\Exception\Collection\ExceptionHandlerCollection;
 use LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception\AuthenticationExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\AuthVerifierRepository;
 use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Verifier\FalseVerifier;
+use LDL\Http\Router\Middleware\AbstractMiddleware;
+use Symfony\Component\HttpFoundation\ParameterBag;
 
-class Dispatcher implements RouteDispatcherInterface
+class Dispatcher extends AbstractMiddleware
 {
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function getPriority(): int
+    {
+        return 1;
+    }
+
     public function dispatch(
+        RouteInterface $route,
         RequestInterface $request,
-        ResponseInterface $response
-    ) : array
+        ResponseInterface $response,
+        ParameterBag $urlParameters = null
+    ): ?array
     {
         return [
             'age' => (int) $request->get('age'),
@@ -51,7 +65,8 @@ $providers->append(
         ),
         null,
         true
-    )
+    ),
+    'ldl.auth.http.basic.auth'
 );
 
 /**
@@ -71,7 +86,7 @@ $verifiers = new AuthVerifierRepository();
  *
  * See file ./routes.json
  */
-$verifiers->append(new FalseVerifier());
+$verifiers->append(new FalseVerifier(), 'ldl.auth.false.verifier');
 
 /**
  * Add auth configuration parsing capabilities to route factory
@@ -101,6 +116,9 @@ try {
         $exceptionHandlers
     );
 
+    $router->getDispatcherChain()
+        ->append(new Dispatcher('http.dispatcher'));
+
     $routes = RouteFactory::fromJsonFile(
         __DIR__ . '/routes.json',
         $router,
@@ -108,7 +126,7 @@ try {
         $parserCollection
     );
 
-    $group = new RouteGroup('student', 'student', $routes);
+    $group = new RouteGroup('test', 'student', $routes);
 
     $router->addGroup($group);
     $router->dispatch()->send();

@@ -2,6 +2,7 @@
 
 namespace LDL\Http\Router\Plugin\LDL\Auth\Handler\Exception;
 
+use LDL\Framework\Base\Traits\IsActiveInterfaceTrait;
 use LDL\Http\Core\Response\ResponseInterface;
 use LDL\Http\Router\Handler\Exception\AbstractExceptionHandler;
 use LDL\Http\Router\Plugin\LDL\Auth\Dispatcher\Exception\AuthenticationFailureException;
@@ -11,42 +12,21 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 
 class AuthenticationExceptionHandler extends AbstractExceptionHandler
 {
-    /**
-     * @return string
-     */
-    public function getNamespace(): string
-    {
-        return 'LDLAuthPlugin';
-    }
+    private const NAME = 'ldl.auth.exception.handler';
+    private const DEFAULT_IS_ACTIVE = true;
+    public const DEFAULT_PRIORITY = 1;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return 'AuthExceptionHandler';
-    }
+    use IsActiveInterfaceTrait;
 
-    /**
-     * @return int
-     */
-    public function getPriority(): int
+    public function __construct(bool $isActive = null, int $priority = self::DEFAULT_PRIORITY)
     {
-        return 1;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return true;
+        parent::__construct(self::NAME, $priority);
+        $this->_tActive = $isActive ?? self::DEFAULT_IS_ACTIVE;
     }
 
     public function handle(
         Router $router,
         \Exception $e,
-        string $context,
         ParameterBag $urlParameters = null
     ): ?int
     {

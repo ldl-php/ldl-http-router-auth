@@ -8,14 +8,7 @@ use LDL\Http\Router\Plugin\LDL\Auth\Credentials\Provider\CredentialsProviderInte
 
 interface AuthProcedureInterface
 {
-    public const NAMESPACE = 'LDLAuthPlugin';
-
     public function isDefault() : bool;
-
-    /**
-     * @return string
-     */
-    public function getNamespace() : string;
 
     /**
      * @return string

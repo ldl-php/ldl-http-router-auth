@@ -7,8 +7,6 @@ use LDL\Http\Router\Plugin\LDL\Auth\Procedure\AuthProcedureInterface;
 
 interface TokenGeneratorInterface
 {
-    public function getNamespace() : string;
-
     public function getName() : string;
 
     /**
